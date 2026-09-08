@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>VoiceAgent Console</title>
+<style>
+  /* Design tokens — agentic-inspired: warm accent on quiet surfaces */
+  :root {
+    --accent:#FF5701; --surface:#FFFFFF; --bg:#F6F6F1; --fg:#111827;
+    --muted:#6B7280; --border:#E5E7EB; --good:#16A34A; --bad:#DC2626;
+    --warn:#D97706; --font:14px/1.55 -apple-system, system-ui, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:var(--font); }
+  .shell { min-height:100vh; display:grid; grid-template-columns:230px 1fr; }
+  aside { background:var(--surface); border-right:1px solid var(--border); padding:18px 12px; }
+  .brand { font-weight:700; font-size:16px; padding:6px 12px 16px; display:flex; align-items:center; gap:8px; }
+  .brand .dot { width:10px; height:10px; border-radius:50%; background:var(--accent); }
+  nav { display:flex; flex-direction:column; gap:2px; }
+  nav a { padding:8px 12px; border-radius:8px; color:var(--fg); text-decoration:none; font-weight:500; }
+  nav a.active { background:var(--bg); box-shadow: inset 3px 0 0 var(--accent); }
+  nav a:hover { background:var(--bg); }
+  .group { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; padding:14px 12px 6px; }
+  main { padding:0 30px 60px; min-width:0; }
+  .topbar { display:flex; justify-content:space-between; align-items:center; padding:20px 0 6px; border-bottom:1px solid var(--border); margin-bottom:22px; gap:12px; flex-wrap:wrap; }
+  .topbar h1 { font-size:22px; margin:0; letter-spacing:-.01em; }
+  .topbar .conn { display:flex; gap:8px; align-items:center; color:var(--muted); font-size:12px; }
+  .pill { padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; }
+  .pill.on { background:#E7F6EC; color:var(--good); }
+  .pill.off { background:#FDEBEB; color:var(--bad); }
+  .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+  @media (max-width:1000px){ .kpis{ grid-template-columns:repeat(2,1fr);} }
+  .kpi { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 18px; }
+  .kpi .label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px; }
+  .kpi .value { font-size:30px; font-weight:700; letter-spacing:-.02em; }
+  .kpi .sub { font-size:12px; margin-top:4px; color:var(--muted); }
+  .panel { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:16px; }
+  .panel h3 { margin:0 0 14px; font-size:15px; }
+  .row { display:grid; grid-template-columns:2fr 1fr; gap:16px; }
+  @media (max-width:1000px){ .row{ grid-template-columns:1fr;} }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--border); }
+  th { color:var(--muted); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.05em; }
+  .verdict { font-weight:600; }
+  .v-allow { color:var(--good); } .v-escalate { color:var(--warn); }
+  .v-deny { color:var(--bad); }
+  .chart { display:flex; align-items:flex-end; gap:6px; height:140px; padding-top:10px; }
+  .bar { flex:1; background:var(--accent); opacity:.85; border-radius:4px 4px 0 0; min-width:8px; position:relative; }
+  .bar span { position:absolute; top:-18px; left:0; right:0; text-align:center; font-size:11px; color:var(--muted); }
+  button { font:inherit; cursor:pointer; padding:8px 16px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--fg); font-weight:500; }
+  .btn-primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .muted { color:var(--muted); }
+  .empty { padding:26px; text-align:center; color:var(--muted); }
+  .btn-sm { padding:4px 10px; font-size:12px; }
+  .bars-legend { display:flex; gap:14px; font-size:12px; color:var(--muted); margin-top:8px; flex-wrap:wrap; }
+  .bars-legend i { display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:5px; vertical-align:-1px; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside>
+    <div class="brand"><span class="dot"></span> VoiceAgent</div>
+    <nav>
+      <div class="group">Console</div>
+      <a href="dashboard.html" class="active">Dashboard</a>
+      <a href="onboard.html">+ New agent</a>
+      <div class="group">Agent</div>
+      <a href="index.html">Connection</a>
+    </nav>
+  </aside>
+  <main>
+    <div class="topbar">
+      <h1>Overview</h1>
+      <div class="conn"><span id="connState" class="pill off">not connected</span>
+        <button class="btn-sm" id="refreshBtn">Refresh</button></div>
+    </div>
+
+    <section class="kpis" aria-label="Key metrics">
+      <div class="kpi"><div class="label">Calls handled</div><div class="value" id="kCalls">–</div><div class="sub">governed decisions logged</div></div>
+      <div class="kpi"><div class="label">Avg caller rating</div><div class="value" id="kRating">–</div><div class="sub">/10, from feedback tool</div></div>
+      <div class="kpi"><div class="label">Escalation rate</div><div class="value" id="kEsc">–</div><div class="sub">share routed to humans</div></div>
+      <div class="kpi"><div class="label">Convs this set</div><div class="value" id="kConvs">–</div><div class="sub">unique conversations</div></div>
+    </section>
+
+    <div class="row">
+      <section class="panel" aria-label="Recent decisions">
+        <h3>Recent decisions</h3>
+        <div id="callsWrap"><div class="empty">No agent connected — showing demo data. <button class="btn-sm" id="demoBtn">Use demo</button></div></div>
+        <div id="callsTable" hidden>
+          <table><thead><tr><th>Time</th><th>Conv</th><th>Action</th><th>Verdict</th><th>Notes</th></tr></thead>
+          <tbody id="callsBody"></tbody></table>
+        </div>
+      </section>
+      <section class="panel" aria-label="Verdict distribution">
+        <h3>Verdict distribution</h3>
+        <div class="chart" id="vchart"></div>
+        <div class="bars-legend">
+          <span><i style="background:var(--good)"></i>ALLOW</span>
+          <span><i style="background:var(--warn)"></i>ESCALATE</span>
+          <span><i style="background:var(--bad)"></i>DENY</span>
+          <span><i style="background:var(--muted)"></i>other</span>
+        </div>
+        <p class="muted" style="margin-bottom:0">Rating comments: <span id="comments">–</span></p>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+// ---- control-API client (agent URL + token come from localStorage) --------
+const cfg = () => JSON.parse(localStorage.getItem('va_agent') || 'null');
+async function api(path, opts = {}) {
+  const c = cfg();
+  if (!c) throw new Error('not configured');
+  const r = await fetch(c.url.replace(/\/$/, '') + path, {
+    method: opts.method || 'GET',
+    headers: { 'Authorization': 'Bearer ' + c.token, 'Content-Type': 'application/json' },
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+
+// ---- demo data (reviewable without an agent) ------------------------------
+const DEMO = {
+  calls: [
+    { ts: '2026-09-09T09:04:00', conv_id: 'demo-4821', action: 'cancel_order', verdict: 'ALLOW', reasons: ['order not shipped'] },
+    { ts: '2026-09-09T08:52:00', conv_id: 'demo-4820', action: 'fraud_check', verdict: 'ESCALATE', reasons: ['high risk'] },
+    { ts: '2026-09-09T08:31:00', conv_id: 'demo-4819', action: 'fetch_order_status', verdict: 'ALLOW', reasons: [] },
+    { ts: '2026-09-09T08:05:00', conv_id: 'demo-4818', action: 'record_feedback', verdict: 'ALLOW', reasons: ['rating 8'] },
+    { ts: '2026-09-09T07:44:00', conv_id: 'demo-4817', action: 'cancel_order', verdict: 'DENY', reasons: ['precondition_failed'] },
+  ],
+  summary: { calls: 5, conversations: 5, escalation_rate: 0.2, ratings: 1, avg_rating_10: 8.0,
+             verdicts: { ALLOW: 3, ESCALATE: 1, DENY: 1 } },
+  ratings: [{ tenant: 'demo', session_id: 'demo-4818', ts: '2026-09-09T08:05:00', rating: 8, comment: 'fast and clear' }],
+};
+
+// ---- render ----------------------------------------------------------------
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function setPill(ok){ const p = document.getElementById('connState');
+  p.textContent = ok ? 'connected' : 'not connected'; p.className = 'pill ' + (ok ? 'on' : 'off'); }
+
+function verdictClass(v){ const s = String(v).toUpperCase(); if (s.includes('ALLOW')) return 'v-allow';
+  if (s.includes('ESCALATE')) return 'v-escalate'; if (s.includes('DENY')) return 'v-deny'; return ''; }
+
+function render(data) {
+  const s = data.summary, calls = data.calls, ratings = data.ratings;
+  document.getElementById('kCalls').textContent = s.calls ?? 0;
+  document.getElementById('kRating').textContent = s.avg_rating_10 != null ? s.avg_rating_10.toFixed(1) : '–';
+  document.getElementById('kEsc').textContent = s.escalation_rate != null ? Math.round(s.escalation_rate*100) + '%' : '–';
+  document.getElementById('kConvs').textContent = s.conversations ?? 0;
+  // calls table
+  const wrap = document.getElementById('callsWrap'), tbl = document.getElementById('callsTable');
+  const body = document.getElementById('callsBody');
+  if (!calls || !calls.length) { wrap.hidden = false; tbl.hidden = true; }
+  else { wrap.hidden = true; tbl.hidden = false;
+    body.innerHTML = calls.slice(0, 8).map(c =>
+      `<tr><td>${esc((c.ts||'').replace('T',' ').slice(0,16))}</td><td>${esc(c.conv_id)}</td>` +
+      `<td>${esc(c.action)}</td><td class="verdict ${verdictClass(c.verdict)}">${esc(c.verdict)}</td>` +
+      `<td class="muted">${esc((c.reasons||[]).join('; '))}</td></tr>`).join(''); }
+  // verdict bars
+  const v = s.verdicts || {};
+  const order = ['ALLOW','ESCALATE','DENY'];
+  const max = Math.max(1, ...order.map(k => v[k]||0));
+  const colors = { ALLOW:'var(--good)', ESCALATE:'var(--warn)', DENY:'var(--bad)' };
+  document.getElementById('vchart').innerHTML = order.map(k =>
+    `<div class="bar" style="height:${Math.round(((v[k]||0)/max)*100)}%;background:${colors[k]};opacity:.9"><span>${v[k]||0}</span></div>`).join('');
+  // comments
+  const cs = (ratings||[]).filter(r => r.comment).map(r => `${esc(r.comment)} (${r.rating}/10)`);
+  document.getElementById('comments').textContent = cs.length ? cs.join(' · ') : 'none yet';
+}
+
+// ---- load: live when configured, else demo -----------------------------------
+let mode = 'demo';
+async function load() {
+  try {
+    const [sum, calls, ratings] = await Promise.all([
+      api('/api/control/summary'), api('/api/control/calls?limit=50'), api('/api/control/ratings?limit=50')]);
+    mode = 'live'; setPill(true); render({ summary: sum, calls: calls.calls, ratings: ratings.ratings });
+  } catch (e) {
+    mode = 'demo'; setPill(false);
+    if (!cfg()) { render(DEMO); }
+    else { render(DEMO); } // live fetch failed: still show demo for reviewability
+  }
+}
+document.getElementById('refreshBtn').onclick = load;
+document.getElementById('demoBtn').onclick = () => { render(DEMO); };
+load();
+</script>
+</body>
+</html>
