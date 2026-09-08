@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Separator } from "@/components/ui/separator"
-import { Loader2, Rocket, ShieldCheck, Sparkles } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Loader2, Rocket, ShieldCheck, Sparkles, FileText, PlugZap } from "lucide-react"
 import { api, getConfig } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
@@ -24,7 +25,7 @@ interface DeployResult {
 }
 
 type Stage = 1 | 2 | 3
-const STEP_LABELS = ["Feed your business", "Review the agent", "Approve & go live"]
+const STEPS = ["Feed your business", "Review the proposal", "Approve & go live"]
 
 export function OnboardPage() {
   const [stage, setStage] = useState<Stage>(1)
@@ -39,6 +40,11 @@ export function OnboardPage() {
   const [preview, setPreview] = useState<Preview | null>(null)
   const [deploy, setDeploy] = useState<DeployResult | null>(null)
 
+  const notConnected = !getConfig()
+  const hasSource = Boolean(url.trim() || text.trim())
+  const canPreview = hasSource && !notConnected && !busy
+  const canApprove = Boolean(preview) && !busy
+
   function body() {
     const source: Record<string, string> = {}
     if (url.trim()) source.url = url.trim()
@@ -47,10 +53,7 @@ export function OnboardPage() {
   }
 
   async function compile() {
-    setErr(null)
-    if (!url.trim() && !text.trim()) { setErr("Paste a website URL or some text about your business first."); return }
-    if (!getConfig()) { setErr("Connect to an agent first (Connection page) — the wizard previews against your agent's compiler."); return }
-    setBusy(true)
+    setErr(null); setBusy(true)
     try {
       const out = await api.onboardPreview(body())
       setPreview(out as unknown as Preview)
@@ -75,22 +78,25 @@ export function OnboardPage() {
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Create a new agent</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          No code needed — describe your business, review what the agent will know and do, then approve. Everything is proposal-gated until you say go.
+          Describe your business in plain words. Review what the agent will know and do — approve before anything goes live.
         </p>
       </header>
 
       {/* stepper */}
       <ol className="flex items-center gap-2">
-        {STEP_LABELS.map((label, i) => {
+        {STEPS.map((label, i) => {
           const n = (i + 1) as Stage
           return (
             <li key={label} className="flex flex-1 items-center gap-2">
               <span className={cn(
-                "flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
-                stage >= n ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
+                "flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors",
+                stage === n && "bg-primary text-primary-foreground",
+                stage > n && "bg-emerald-600 text-white",
+                stage < n && "bg-muted text-muted-foreground")}>
                 {stage > n ? "✓" : n}
               </span>
-              <span className={cn("text-sm font-medium", stage >= n ? "text-foreground" : "text-muted-foreground")}>
+              <span className={cn("hidden text-sm font-medium sm:block",
+                stage >= n ? "text-foreground" : "text-muted-foreground")}>
                 {label}
               </span>
               {n < 3 && <Separator className="flex-1" />}
@@ -99,7 +105,22 @@ export function OnboardPage() {
         })}
       </ol>
 
-      {err && <Alert variant="destructive"><AlertTitle>Something's off</AlertTitle><AlertDescription>{err}</AlertDescription></Alert>}
+      {notConnected && (
+        <Alert>
+          <PlugZap className="size-4" />
+          <AlertTitle>Connect the console to an agent first</AlertTitle>
+          <AlertDescription>
+            The wizard compiles against your agent's control API. <a className="font-medium underline underline-offset-2" href="/connect">Connection page →</a>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {err && (
+        <Alert variant="destructive">
+          <AlertTitle>That didn't work</AlertTitle>
+          <AlertDescription>{err}</AlertDescription>
+        </Alert>
+      )}
 
       {stage === 1 && (
         <Card>
@@ -112,10 +133,15 @@ export function OnboardPage() {
               <Label htmlFor="srcUrl">Website URL</Label>
               <Input id="srcUrl" placeholder="https://yourbusiness.com" value={url} onChange={(e) => setUrl(e.target.value)} />
             </div>
+            <div className="relative text-center">
+              <div className="absolute inset-0 flex items-center"><Separator /></div>
+              <span className="relative bg-card px-2 text-xs text-muted-foreground">and/or paste text</span>
+            </div>
             <div className="space-y-1.5">
-              <Label htmlFor="srcText">Or describe your business</Label>
+              <Label htmlFor="srcText">Describe your business</Label>
               <Textarea id="srcText" placeholder="e.g. Sunrise Dental Clinic offers root canals and cleanings, open 9am–6pm weekdays. Patients book, ask about prices, and cancel visits…"
                 value={text} onChange={(e) => setText(e.target.value)} rows={5} />
+              <p className="text-xs text-muted-foreground">{text.trim().length}/8000 characters</p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
@@ -123,28 +149,42 @@ export function OnboardPage() {
                 <Input id="offering" placeholder="dental clinic appointments" value={offering} onChange={(e) => setOffering(e.target.value)} />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="asks">Top customer asks (comma-separated)</Label>
+                <Label htmlFor="asks">Top customer asks</Label>
                 <Input id="asks" placeholder="booking, price, cancel" value={asks} onChange={(e) => setAsks(e.target.value)} />
               </div>
             </div>
-            <Button onClick={() => void compile()} disabled={busy} className="w-full sm:w-auto">
-              {busy && <Loader2 className="size-4 mr-2 animate-spin" />} Preview the agent →
-            </Button>
+            <div className="flex items-center justify-between pt-2">
+              <p className="text-xs text-muted-foreground">Preview compiles instantly — nothing is written or approved.</p>
+              <Button onClick={() => void compile()} disabled={!canPreview}>
+                {busy && <Loader2 className="size-4 mr-2 animate-spin" />}
+                Preview the agent <span className="ml-1.5">→</span>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
 
-      {stage === 2 && preview && (
+      {stage === 2 && (busy || !preview ? (
+        <Card>
+          <CardContent className="space-y-4 pt-6">
+            <Skeleton className="h-5 w-56" />
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-10 w-36" />
+          </CardContent>
+        </Card>
+      ) : (
         <div className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base"><ShieldCheck className="size-4 text-emerald-600" /> Review before anything goes live</CardTitle>
-              <CardDescription>Below is a <b>proposal</b> — compiled, not executed. Approve on the next step.</CardDescription>
+              <CardDescription>This is a <b>proposal</b> — compiled for your review, not executed. Approving on the next step activates it.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <h3 className="mb-2 text-sm font-semibold">Knowledge it will answer from</h3>
-                {(preview.knowledge || []).length === 0 && <p className="text-sm text-muted-foreground">No knowledge extracted yet.</p>}
+                <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold"><FileText className="size-4 text-muted-foreground" /> Knowledge it will answer from</h3>
+                {(preview.knowledge || []).length === 0 && <p className="text-sm text-muted-foreground">No knowledge extracted yet — the agent will answer from guardrails only.</p>}
                 <div className="space-y-2">
                   {(preview.knowledge || []).slice(0, 5).map((k, i) => (
                     <div key={i} className="rounded-lg border p-3 text-sm">
@@ -156,7 +196,7 @@ export function OnboardPage() {
               </div>
               <Separator />
               <div>
-                <h3 className="mb-2 text-sm font-semibold">Tools it may propose</h3>
+                <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold"><Sparkles className="size-4 text-muted-foreground" /> Tools it may propose <span className="text-xs font-normal text-muted-foreground">(policy-gated)</span></h3>
                 {(preview.tools || []).length === 0 && <p className="text-sm text-muted-foreground">No tools proposed.</p>}
                 <div className="space-y-2">
                   {(preview.tools || []).map((t) => (
@@ -172,14 +212,14 @@ export function OnboardPage() {
               </div>
               <div className="flex justify-between">
                 <Button variant="outline" onClick={() => setStage(1)}>← Back</Button>
-                <Button onClick={() => void approve()} disabled={busy}>
-                  {busy && <Loader2 className="size-4 mr-2 animate-spin" />} Looks right — approve & deploy
+                <Button onClick={() => void approve()} disabled={!canApprove}>
+                  {busy && <Loader2 className="size-4 mr-2 animate-spin" />} Looks right — approve &amp; deploy
                 </Button>
               </div>
             </CardContent>
           </Card>
         </div>
-      )}
+      ))}
 
       {stage === 3 && deploy && (
         <Card>
@@ -191,11 +231,9 @@ export function OnboardPage() {
             <CardDescription>{deploy.summary}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="rounded-lg border p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Self-checks</span>
-                <Badge variant={passed === total ? "default" : "destructive"}>{passed}/{total} passed</Badge>
-              </div>
+            <div className="flex items-center justify-between rounded-lg border p-4">
+              <span className="text-sm font-medium">Self-checks</span>
+              <Badge variant={passed === total ? "default" : "destructive"}>{passed}/{total} passed</Badge>
             </div>
             {(deploy.checks || []).map((c) => (
               <div key={c.name} className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
@@ -203,7 +241,10 @@ export function OnboardPage() {
                 <Badge variant={c.passed ? "secondary" : "destructive"}>{c.passed ? "passed" : "failed"}</Badge>
               </div>
             ))}
-            <Button variant="outline" onClick={() => setStage(1)}>Start another agent</Button>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => { setStage(1); setPreview(null); setDeploy(null) }}>Start another agent</Button>
+              {deploy.live && <Button onClick={() => (window.location.href = "/")}>Go to dashboard</Button>}
+            </div>
           </CardContent>
         </Card>
       )}
