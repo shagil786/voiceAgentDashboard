@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom"
-import { LayoutDashboard, PhoneCall, Settings, Sparkles } from "lucide-react"
+import { LayoutDashboard, Sparkles, Settings, Radio, Zap } from "lucide-react"
 import { cn } from "cn"
 
 const NAV = [
@@ -12,65 +12,115 @@ const FOOT = [
 
 export function Shell() {
   return (
-    <div className="flex min-h-screen bg-background">
-      <aside className="hidden w-60 flex-col border-r bg-card md:flex">
-        <div className="flex items-center gap-2.5 px-6 h-16 border-b">
-          <span className="flex size-2 rounded-full bg-primary" />
+    <div className="flex min-h-screen bg-[#faf9f6] text-foreground antialiased">
+      {/* ── dark instrument sidebar ─────────────────────────────── */}
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col bg-[#141416] text-white md:flex">
+        {/* brand */}
+        <div className="flex h-16 items-center gap-2.5 border-b border-white/8 px-5">
+          <span className="relative flex size-2.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#ff5701] opacity-60" />
+            <span className="relative inline-flex size-2.5 rounded-full bg-[#ff5701]" />
+          </span>
           <span className="text-[15px] font-semibold tracking-tight">VoiceAgent</span>
+          <span className="ml-auto rounded-md border border-white/10 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-white/50">console</span>
         </div>
-        <nav className="flex-1 space-y-6 px-3 py-5">
+
+        {/* workspace switcher-ish card */}
+        <div className="mx-4 mt-4 rounded-xl border border-white/8 bg-white/4 p-3 transition-colors hover:border-white/15">
+          <p className="flex items-center gap-1.5 text-[11px] font-medium text-white/60">
+            <Radio className="size-3" /> Workspace
+          </p>
+          <p className="mt-0.5 truncate text-[13px] font-medium text-white/90">Local agent · demo</p>
+        </div>
+
+        <nav className="flex-1 space-y-5 px-4 py-5">
           <div>
-            <p className="px-3 pb-2 text-xs font-medium text-muted-foreground">Console</p>
+            <p className="px-2 pb-2 font-mono text-[10px] uppercase tracking-[0.16em] text-white/35">Workspace</p>
             <div className="space-y-1">
               {NAV.map(({ to, label, icon: Icon, end }) => (
                 <NavLink key={to} to={to} end={end}
                   className={({ isActive }) => cn(
-                    "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-                    isActive && "bg-muted text-foreground")}>
-                  <Icon className="size-4" /> {label}
+                    "group relative flex items-center gap-2.5 overflow-hidden rounded-lg px-2.5 py-2 text-[13px] font-medium transition-all duration-200",
+                    "text-white/60 hover:translate-x-0.5 hover:bg-white/6 hover:text-white",
+                    isActive && "bg-white/8 text-white shadow-[inset_2px_0_0_0_#ff5701]")}>
+                  {({ isActive }) => (
+                    <>
+                      <Icon className={cn("size-4 transition-colors",
+                        isActive ? "text-[#ff5701]" : "text-white/45 group-hover:text-white/80")} />
+                      {label}
+                      {isActive && <Zap className="ml-auto size-3 text-[#ff5701]/80" />}
+                    </>
+                  )}
                 </NavLink>
               ))}
             </div>
           </div>
+
           <div>
-            <p className="px-3 pb-2 text-xs font-medium text-muted-foreground">Agent</p>
+            <p className="px-2 pb-2 font-mono text-[10px] uppercase tracking-[0.16em] text-white/35">Agent</p>
             <div className="space-y-1">
               {FOOT.map(({ to, label, icon: Icon, end }) => (
                 <NavLink key={to} to={to} end={end}
                   className={({ isActive }) => cn(
-                    "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-                    isActive && "bg-muted text-foreground")}>
-                  <Icon className="size-4" /> {label}
+                    "group relative flex items-center gap-2.5 overflow-hidden rounded-lg px-2.5 py-2 text-[13px] font-medium transition-all duration-200",
+                    "text-white/60 hover:translate-x-0.5 hover:bg-white/6 hover:text-white",
+                    isActive && "bg-white/8 text-white shadow-[inset_2px_0_0_0_#ff5701]")}>
+                  {({ isActive }) => (
+                    <>
+                      <Icon className={cn("size-4 transition-colors",
+                        isActive ? "text-[#ff5701]" : "text-white/45 group-hover:text-white/80")} />
+                      {label}
+                    </>
+                  )}
                 </NavLink>
               ))}
             </div>
           </div>
         </nav>
-        <div className="border-t px-6 py-4 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1.5">
-            <PhoneCall className="size-3.5" /> v0.1 · control-plane
-          </span>
+
+        {/* status footer */}
+        <div className="border-t border-white/8 p-4">
+          <div className="flex items-center justify-between rounded-lg bg-white/4 px-3 py-2">
+            <span className="flex items-center gap-2 text-xs text-white/60">
+              <span className="size-1.5 rounded-full bg-emerald-400" /> Control API
+            </span>
+            <span className="font-mono text-[10px] text-white/40">:8081</span>
+          </div>
+          <p className="mt-3 text-center font-mono text-[10px] tracking-wider text-white/25">v0.1 · control-plane</p>
         </div>
       </aside>
 
       {/* mobile top bar */}
-      <div className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b bg-card px-4 md:hidden">
+      <div className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-[#141416] px-4 text-white md:hidden">
         <span className="flex items-center gap-2 text-[15px] font-semibold">
-          <span className="size-2 rounded-full bg-primary" /> VoiceAgent
+          <span className="size-2 rounded-full bg-[#ff5701]" /> VoiceAgent
         </span>
         <nav className="flex gap-1">
           {[...NAV, ...FOOT].map(({ to, label }) => (
             <NavLink key={to} to={to} end={to === "/"}
-              className={({ isActive }) => cn("rounded-md px-2 py-1 text-sm", isActive ? "bg-muted" : "text-muted-foreground")}>
+              className={({ isActive }) => cn("rounded-md px-2.5 py-1.5 text-sm transition-colors",
+                isActive ? "bg-white/10 text-white" : "text-white/50 hover:text-white")}>
               {label}
             </NavLink>
           ))}
         </nav>
       </div>
 
-      <main className="flex-1 px-4 pt-20 pb-12 md:pt-0 md:px-8">
-        <div className="mx-auto w-full max-w-6xl pt-6 md:pt-8">
-          <Outlet />
+      {/* light canvas */}
+      <main className="min-h-screen flex-1 pl-0 md:pl-[248px]">
+        <div
+          className="relative min-h-screen"
+          style={{
+            background:
+              "radial-gradient(1100px 480px at 85% -8%, rgba(255,87,1,0.055), transparent 60%), radial-gradient(900px 420px at -10% 110%, rgba(20,20,22,0.04), transparent 55%), #faf9f6",
+          }}>
+          {/* dot grid texture */}
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.35]"
+            style={{ backgroundImage: "radial-gradient(rgba(20,20,22,0.09) 0.6px, transparent 0.6px)", backgroundSize: "22px 22px" }} />
+          <div className="relative mx-auto w-full max-w-6xl px-5 pb-16 pt-20 md:px-8 md:pt-10">
+            <Outlet />
+          </div>
         </div>
       </main>
     </div>
