@@ -8,10 +8,10 @@ import {
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { RefreshCw, ArrowUpRight, PlugZap, Star, ArrowRight, ListChecks, BarChart3 } from "lucide-react"
-import { api, getConfig, type CallRow, type RatingRow, type Summary } from "@/lib/api"
+import { api, getConfig, type CallRow, type ConvScore, type RatingRow, type Summary } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
-type Data = { summary: Summary; calls: CallRow[]; ratings: RatingRow[] }
+type Data = { summary: Summary; calls: CallRow[]; ratings: RatingRow[]; scores: ConvScore[] }
 type Phase = "loading" | "live" | "empty" | "error"
 
 function verdictClass(v: string) {
@@ -79,15 +79,18 @@ export function DashboardPage() {
     // newest-first: fresh is already DESC, prepend then cap
     const calls = [...fresh, ...prev.calls].slice(0, 30)
     setLastUpdate(new Date())
-    return { summary, calls, ratings: prev.ratings }
+    return { summary, calls, ratings: prev.ratings, scores: prev.scores }
   }
 
   async function load() {
     setPhase("loading"); setError(null)
     if (!getConfig()) { setPhase("empty"); return }
     try {
-      const [summary, calls, ratings] = await Promise.all([api.summary(), api.calls(100), api.ratings(50)])
-      setData({ summary, calls: calls.calls, ratings: ratings.ratings })
+      const [summary, calls, ratings, scores] = await Promise.all([
+        api.summary(), api.calls(100), api.ratings(50),
+        api.scores().catch(() => ({ scores: [] as ConvScore[] })),
+      ])
+      setData({ summary, calls: calls.calls, ratings: ratings.ratings, scores: scores.scores })
       setLastUpdate(new Date())
       setPhase("live")
     } catch (e) {
@@ -185,7 +188,7 @@ export function DashboardPage() {
   }
 
   // live
-  const { summary: s, calls, ratings } = data!
+  const { summary: s, calls, ratings, scores } = data!
   const verdictTotal = Math.max(1, Object.values(s.verdicts).reduce((a, b) => a + b, 0))
   const verdicts = Object.entries(s.verdicts).sort((a, b) => b[1] - a[1])
   const comments = ratings.filter((r) => r.comment)
@@ -320,6 +323,41 @@ export function DashboardPage() {
             )}
           </CardContent>
         </Card>
+      </section>
+
+      {/* quality: LLM-judge rubric scores */}
+      <section>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold tracking-tight">Quality scores</h2>
+          <span className="font-mono text-[11px] uppercase tracking-wider text-black/35">
+            {scores.length ? `rubric · ${scores[0]?.source ?? ""}` : "rubric"}
+          </span>
+        </div>
+        {scores.length === 0 ? (
+          <Card className="rounded-xl border-dashed">
+            <CardContent className="py-8 text-center text-sm text-black/45">
+              Per-conversation quality scores appear here once calls are scored by the judge.
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-3">
+            {scores.slice(0, 3).map((sc) => (
+              <Card key={sc.conv_id} className="card-3d card-3d-hover">
+                <CardContent className="pt-5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl font-semibold tracking-tight">
+                      {sc.overall != null ? sc.overall.toFixed(1) : "—"}
+                      <span className="text-sm font-normal text-black/35">/10</span>
+                    </span>
+                    <Badge variant="outline" className="font-mono text-[10px] text-black/45">{sc.source}</Badge>
+                  </div>
+                  <p className="mt-1 font-mono text-xs text-black/40">{sc.conv_id}</p>
+                  <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-black/50">{sc.reasoning}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* feedback */}

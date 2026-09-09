@@ -75,7 +75,13 @@ export interface StatusInfo {
   ok: boolean; audit_db?: string | null; memory_db?: string | null; deploy_root?: string | null
 }
 
+export interface ConvScore {
+  source: string; overall: number | null; tool_choice: number | null;
+  verdict_quality: number | null; escalation_judgment: number | null;
+  reasoning: string; conv_id?: string
+}
 export const api = {
+  scores: () => request<{ scores: ConvScore[] }>("/api/control/scores"),
   status: () => request<StatusInfo>("/api/control/status"),
   summary: () => request<Summary>("/api/control/summary"),
   calls: (limit = 100) => request<{ calls: CallRow[] }>(`/api/control/calls?limit=${limit}`),
