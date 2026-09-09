@@ -67,7 +67,7 @@ export function ConnectPage() {
           </Alert>
         )}
 
-        <Card className="rounded-2xl border-black/8 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04),0_20px_50px_-30px_rgba(0,0,0,0.2)]">
+        <Card className="card-3d">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-base"><PlugZap className="size-4 text-[#ff5701]" /> Agent control API</CardTitle>
             <CardDescription className="text-[13px] text-black/50">Start the control server on the agent machine, then enter its details.</CardDescription>

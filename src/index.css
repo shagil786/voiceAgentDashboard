@@ -30,10 +30,48 @@
     --ring: #ff5701;
     --radius: 0.75rem;
   }
+
+  * { border-color: var(--border); }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3 { letter-spacing: -0.02em; }
 }
 
-@layer base {
-  * { border-color: var(--border); }
-  body { background: var(--background); color: var(--foreground); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-  h1, h2, h3 { letter-spacing: -0.02em; }
+/* Elevated '3D' card: white surface, soft inner highlight, layered depth
+   shadows (no hard outline). Hover raises the card slightly. */
+@layer utilities {
+  .card-3d {
+    background: #ffffff;
+    border: 1px solid rgba(20, 20, 22, 0.05);
+    border-radius: 0.9rem;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      0 1px 2px rgba(20, 20, 22, 0.04),
+      0 10px 28px -14px rgba(20, 20, 22, 0.16);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+  .card-3d-hover:hover {
+    transform: translateY(-2px);
+    border-color: rgba(20, 20, 22, 0.1);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      0 2px 4px rgba(20, 20, 22, 0.04),
+      0 22px 44px -18px rgba(20, 20, 22, 0.28);
+  }
+  /* Flat row inside a card (knowledge/tool rows): hairline only, no depth */
+  .row-flat {
+    background: #ffffff;
+    border: 1px solid rgba(20, 20, 22, 0.06);
+    border-radius: 0.7rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .row-flat-hover:hover {
+    border-color: rgba(20, 20, 22, 0.12);
+    box-shadow: 0 8px 20px -14px rgba(20, 20, 22, 0.2);
+  }
 }

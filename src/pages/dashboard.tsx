@@ -164,7 +164,7 @@ export function DashboardPage() {
 
       {/* hero metrics */}
       <section className="grid gap-5 lg:grid-cols-3">
-        <Card className="relative overflow-hidden rounded-2xl border-black/8 bg-white p-0 shadow-sm transition-shadow duration-300 hover:shadow-md">
+        <Card className="card-3d relative overflow-hidden p-0">
           <div className="absolute -right-10 -top-10 size-44 rounded-full bg-[#ff5701]/6" />
           <CardHeader className="pb-1">
             <CardDescription className="font-mono text-[11px] uppercase tracking-[0.15em] text-black/40">Calls handled</CardDescription>
@@ -178,7 +178,7 @@ export function DashboardPage() {
         </Card>
 
         <div className="grid grid-cols-2 gap-5">
-          <Card className="rounded-2xl border-black/8 bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
+          <Card className="card-3d card-3d-hover">
             <CardHeader className="pb-1">
               <CardDescription className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.15em] text-black/40">
                 Rating <Star className="size-3 fill-amber-400 text-amber-400" />
@@ -191,7 +191,7 @@ export function DashboardPage() {
               </p>
             </CardContent>
           </Card>
-          <Card className="rounded-2xl border-black/8 bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
+          <Card className="card-3d card-3d-hover">
             <CardHeader className="pb-1">
               <CardDescription className="font-mono text-[11px] uppercase tracking-[0.15em] text-black/40">Escalation</CardDescription>
             </CardHeader>
@@ -203,7 +203,7 @@ export function DashboardPage() {
           </Card>
         </div>
 
-        <Card className="flex flex-col rounded-2xl border-black/8 bg-white shadow-sm">
+        <Card className="card-3d flex flex-col">
           <CardHeader className="pb-2">
             <CardDescription className="font-mono text-[11px] uppercase tracking-[0.15em] text-black/40">Verdict mix</CardDescription>
           </CardHeader>
@@ -235,7 +235,7 @@ export function DashboardPage() {
             All decisions <ArrowUpRight className="ml-1 size-3.5" />
           </Button>
         </div>
-        <Card className="overflow-hidden rounded-2xl border-black/8 bg-white shadow-sm">
+        <Card className="card-3d overflow-hidden">
           <CardContent className="p-0">
             {calls.length === 0 ? (
               <p className="py-10 text-center text-sm text-black/45">
@@ -275,7 +275,7 @@ export function DashboardPage() {
           <h2 className="mb-4 text-lg font-semibold tracking-tight">Caller feedback</h2>
           <div className="grid gap-4 md:grid-cols-3">
             {comments.slice(0, 3).map((r) => (
-              <Card key={r.session_id} className="rounded-2xl border-black/8 bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
+              <Card key={r.session_id} className="card-3d card-3d-hover">
                 <CardContent className="pt-5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-0.5">

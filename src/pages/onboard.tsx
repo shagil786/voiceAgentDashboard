@@ -135,7 +135,7 @@ export function OnboardPage() {
           )}
 
           {stage === 1 && (
-            <Card className="rounded-2xl border-black/8 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04),0_20px_50px_-30px_rgba(0,0,0,0.2)]">
+            <Card className="card-3d">
               <CardHeader className="pb-3">
                 <CardDescription className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#ff5701]">Step 1 — input</CardDescription>
               </CardHeader>
@@ -190,7 +190,7 @@ export function OnboardPage() {
           )}
 
           {stage === 2 && (busy || !preview ? (
-            <Card className="rounded-2xl border-black/8 bg-white shadow-sm">
+            <Card className="card-3d">
               <CardContent className="space-y-4 pt-6">
                 <Skeleton className="h-5 w-64" />
                 <Skeleton className="h-24 w-full rounded-lg" />
@@ -200,7 +200,7 @@ export function OnboardPage() {
               </CardContent>
             </Card>
           ) : (
-            <Card className="rounded-2xl border-black/8 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04),0_20px_50px_-30px_rgba(0,0,0,0.2)]">
+            <Card className="card-3d">
               <CardHeader className="pb-3">
                 <CardDescription className="font-mono text-[11px] uppercase tracking-[0.18em] text-emerald-600">Step 2 — review</CardDescription>
                 <CardTitle className="mt-1 text-xl">What the agent will know and do.</CardTitle>
@@ -216,7 +216,7 @@ export function OnboardPage() {
                   )}
                   <div className="space-y-2">
                     {(preview.knowledge || []).slice(0, 5).map((k, i) => (
-                      <div key={i} className="rounded-xl border border-black/6 bg-white p-3.5 transition-colors hover:border-black/12">
+                      <div key={i} className="row-flat p-3.5">
                         <p className="text-sm leading-relaxed">{k.text}</p>
                         <p className="mt-1.5 font-mono text-xs text-black/40">{k.source}</p>
                       </div>
@@ -232,7 +232,7 @@ export function OnboardPage() {
                   {(preview.tools || []).length === 0 && <p className="text-sm text-black/45">No tools proposed.</p>}
                   <div className="space-y-2">
                     {(preview.tools || []).map((t) => (
-                      <div key={t.name} className="flex items-start justify-between gap-3 rounded-xl border border-black/6 bg-white p-3.5 transition-all hover:-translate-y-px hover:border-black/12 hover:shadow-sm">
+                      <div key={t.name} className="row-flat row-flat-hover flex items-start justify-between gap-3 p-3.5">
                         <div>
                           <p className="font-mono text-sm font-medium">{t.name}</p>
                           <p className="mt-0.5 text-sm text-black/50">{t.description || "Policy-gated governed action."}</p>
@@ -257,7 +257,7 @@ export function OnboardPage() {
           ))}
 
           {stage === 3 && deploy && (
-            <Card className="rounded-2xl border-black/8 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04),0_20px_50px_-30px_rgba(0,0,0,0.2)]">
+            <Card className="card-3d">
               <CardHeader className="pb-4">
                 <CardDescription className="font-mono text-[11px] uppercase tracking-[0.18em] text-black/40">Step 3 — result</CardDescription>
                 <CardTitle className={cn("mt-1 flex items-center gap-2 text-2xl", deploy.live ? "text-emerald-600" : "text-amber-600")}>
@@ -267,7 +267,7 @@ export function OnboardPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {(deploy.checks || []).map((c) => (
-                  <div key={c.name} className="flex items-center justify-between rounded-xl border border-black/6 bg-white px-4 py-3">
+                  <div key={c.name} className="row-flat flex items-center justify-between px-4 py-3">
                     <span className="text-sm font-medium">{c.name}</span>
                     <Badge variant={c.passed ? "secondary" : "destructive"}
                       className="rounded-full bg-black/5 font-mono text-[11px] text-black/55">
