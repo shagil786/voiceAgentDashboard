@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -7,11 +6,13 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { RefreshCw, ArrowUpRight, PlugZap, Star, ArrowRight, ListChecks, BarChart3 } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { RefreshCw, ArrowUpRight, PlugZap, Star, ArrowRight, ListChecks, BarChart3, PhoneCall, Headset, TrendingUp } from "lucide-react"
+import { AnimatedCounter, SpotlightCard, Stagger, StaggerItem } from "@/components/motion-primitives"
 import { api, getConfig, type CallRow, type ConvScore, type RatingRow, type Summary } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
-type Data = { summary: Summary; calls: CallRow[]; ratings: RatingRow[]; scores: ConvScore[] }
+type Data = { summary: Summary; calls: CallRow[]; ratings: RatingRow[] }
 type Phase = "loading" | "live" | "empty" | "error"
 
 function verdictClass(v: string) {
@@ -28,11 +29,8 @@ function Waveform() {
   return (
     <div className="flex h-16 items-end justify-center gap-1.5" aria-hidden>
       {heights.map((h, i) => (
-        <span
-          key={i}
-          className="w-1.5 rounded-full bg-[#ff5701] transition-all duration-500"
-          style={{ height: `${h}px`, animation: `wave 1.6s ease-in-out ${i * 0.09}s infinite`, opacity: 0.55 + (i % 3) * 0.15 }}
-        />
+        <span key={i} className="w-1.5 rounded-full bg-[#ff5701] transition-all duration-500"
+          style={{ height: `${h}px`, animation: `wave 1.6s ease-in-out ${i * 0.09}s infinite`, opacity: 0.55 + (i % 3) * 0.15 }} />
       ))}
       <style>{`@keyframes wave { 0%,100% { transform: scaleY(0.55); } 50% { transform: scaleY(1); } }`}</style>
     </div>
@@ -51,10 +49,12 @@ export function DashboardPage() {
   const [error, setError] = useState<string | null>(null)
   const [flashKeys, setFlashKeys] = useState<Set<string>>(new Set())
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
+  // quality panel is independent: judge scoring is slow, must not gate the page
+  const [scores, setScores] = useState<ConvScore[] | null>(null)
+  const [scoresError, setScoresError] = useState<string | null>(null)
 
   const callKey = (c: CallRow) => `${c.conv_id}:${c.ts}`
 
-  // bump summary from newly observed rows (no refetch needed)
   function mergeFresh(prev: Data, latest: CallRow[]): Data {
     const seen = new Set(prev.calls.map(callKey))
     const fresh = latest.filter((c) => !seen.has(callKey(c)))
@@ -76,21 +76,19 @@ export function DashboardPage() {
       const v = c.verdict || "OTHER"
       summary.verdicts = { ...summary.verdicts, [v]: (summary.verdicts[v] || 0) + 1 }
     }
-    // newest-first: fresh is already DESC, prepend then cap
     const calls = [...fresh, ...prev.calls].slice(0, 30)
     setLastUpdate(new Date())
-    return { summary, calls, ratings: prev.ratings, scores: prev.scores }
+    return { summary, calls, ratings: prev.ratings }
   }
 
   async function load() {
     setPhase("loading"); setError(null)
     if (!getConfig()) { setPhase("empty"); return }
     try {
-      const [summary, calls, ratings, scores] = await Promise.all([
+      const [summary, calls, ratings] = await Promise.all([
         api.summary(), api.calls(100), api.ratings(50),
-        api.scores().catch(() => ({ scores: [] as ConvScore[] })),
       ])
-      setData({ summary, calls: calls.calls, ratings: ratings.ratings, scores: scores.scores })
+      setData({ summary, calls: calls.calls, ratings: ratings.ratings })
       setLastUpdate(new Date())
       setPhase("live")
     } catch (e) {
@@ -100,7 +98,17 @@ export function DashboardPage() {
   }
   useEffect(() => { void load() }, [])
 
-  // live decision streaming: poll every 4s while visible & live
+  // quality scores load independently (judge is slow; never gate the page on it)
+  useEffect(() => {
+    if (phase !== "live") return
+    let cancelled = false
+    api.scores()
+      .then((res) => { if (!cancelled) { setScores(res.scores); setScoresError(null) } })
+      .catch((e) => { if (!cancelled) setScoresError(e instanceof Error ? e.message : String(e)) })
+    return () => { cancelled = true }
+  }, [phase])
+
+  // live decision streaming
   useEffect(() => {
     if (phase !== "live") return
     const timer = window.setInterval(async () => {
@@ -108,7 +116,7 @@ export function DashboardPage() {
       try {
         const { calls: latest } = await api.calls(20)
         setData((prev) => (prev ? mergeFresh(prev, latest) : prev))
-      } catch { /* transient — next tick retries */ }
+      } catch { /* transient */ }
     }, 4000)
     return () => window.clearInterval(timer)
   }, [phase])
@@ -119,8 +127,10 @@ export function DashboardPage() {
     return (
       <div className="space-y-8">
         <Skeleton className="h-6 w-44" />
-        <div className="grid gap-6 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-44 rounded-2xl" />)}
+        <div className="grid gap-5 lg:grid-cols-12">
+          <Skeleton className="h-40 rounded-2xl lg:col-span-6" />
+          <Skeleton className="h-40 rounded-2xl lg:col-span-3" />
+          <Skeleton className="h-40 rounded-2xl lg:col-span-3" />
         </div>
         <Skeleton className="h-72 rounded-2xl" />
       </div>
@@ -146,7 +156,7 @@ export function DashboardPage() {
           <div className="card-3d p-6">
             <Waveform />
             <div className="mt-5 text-center">
-              <Button size="lg" className="h-11 gap-2 rounded-full bg-[#141416] px-7 text-white hover:bg-black hover:shadow-lg hover:shadow-black/20 hover:transition-all">
+              <Button size="lg" onClick={goToConnect} className="h-11 gap-2 rounded-full bg-[#141416] px-7 text-white hover:bg-black hover:shadow-lg hover:shadow-black/20">
                 Connect your agent <ArrowRight className="size-4" />
               </Button>
             </div>
@@ -155,17 +165,16 @@ export function DashboardPage() {
 
         <div className="mt-14 grid gap-4 md:grid-cols-3">
           {STEPS.map(({ icon: Icon, title, desc }, i) => (
-            <div key={title}
-              className="card-3d card-3d-hover group p-5">
+            <SpotlightCard key={title} className="p-5">
               <div className="flex items-center gap-3">
-                <span className="flex size-9 items-center justify-center rounded-xl bg-[#141416] text-[#ff5701] transition-colors group-hover:bg-[#ff5701] group-hover:text-white">
+                <span className="flex size-9 items-center justify-center rounded-xl bg-[#141416] text-[#ff5701]">
                   <Icon className="size-4" />
                 </span>
                 <span className="font-mono text-[11px] text-black/35">0{i + 1}</span>
               </div>
               <h3 className="mt-4 text-[15px] font-semibold tracking-tight">{title}</h3>
               <p className="mt-1 text-[13px] leading-relaxed text-black/50">{desc}</p>
-            </div>
+            </SpotlightCard>
           ))}
         </div>
       </div>
@@ -188,10 +197,11 @@ export function DashboardPage() {
   }
 
   // live
-  const { summary: s, calls, ratings, scores } = data!
+  const { summary: s, calls, ratings } = data!
   const verdictTotal = Math.max(1, Object.values(s.verdicts).reduce((a, b) => a + b, 0))
   const verdicts = Object.entries(s.verdicts).sort((a, b) => b[1] - a[1])
   const comments = ratings.filter((r) => r.comment)
+  const allowRate = Math.round(((s.verdicts.ALLOW || 0) / verdictTotal) * 100)
 
   return (
     <div className="space-y-10">
@@ -211,81 +221,104 @@ export function DashboardPage() {
             )}
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => void load()} className="rounded-full">
+        <Button variant="outline" size="sm" onClick={() => void load()}>
           <RefreshCw className="size-3.5 mr-2" /> Refresh
         </Button>
       </header>
 
-      {/* hero metrics */}
-      <section className="grid gap-5 lg:grid-cols-3">
-        <Card className="card-3d relative overflow-hidden p-0">
-          <div className="absolute -right-10 -top-10 size-44 rounded-full bg-[#ff5701]/6" />
-          <CardHeader className="pb-1">
-            <CardDescription className="font-mono text-[11px] uppercase tracking-[0.15em] text-black/40">Calls handled</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-6xl font-semibold tracking-[-0.03em] tabular-nums">{s.calls.toLocaleString()}</p>
-            <p className="mt-2 text-sm text-black/45">
+      {/* ── bento hero ─────────────────────────────────────────── */}
+      <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-12">
+        {/* calls — the big tile */}
+        <StaggerItem className="lg:col-span-6">
+          <SpotlightCard className="h-full p-6">
+            <div className="flex items-center justify-between">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-[#ff5701]/10 text-[#ff5701]">
+                <PhoneCall className="size-4" />
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-black/35">calls handled</span>
+            </div>
+            <p className="mt-5 text-6xl font-semibold tracking-[-0.03em]">
+              <AnimatedCounter value={s.calls} duration={1.8} />
+            </p>
+            <p className="mt-3 text-sm text-black/45">
               across <span className="font-medium text-black/75">{s.conversations.toLocaleString()}</span> conversations
             </p>
-          </CardContent>
-        </Card>
+            <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-700">
+              <TrendingUp className="size-3.5" /> {allowRate}% allow rate
+            </div>
+          </SpotlightCard>
+        </StaggerItem>
 
-        <div className="grid grid-cols-2 gap-5">
-          <Card className="card-3d card-3d-hover">
-            <CardHeader className="pb-1">
-              <CardDescription className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.15em] text-black/40">
-                Rating <Star className="size-3 fill-amber-400 text-amber-400" />
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-semibold tracking-tight tabular-nums">
-                {s.avg_rating_10 != null ? s.avg_rating_10.toFixed(1) : "—"}
-                {s.avg_rating_10 != null && <span className="text-lg font-normal text-black/35">/10</span>}
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="card-3d card-3d-hover">
-            <CardHeader className="pb-1">
-              <CardDescription className="font-mono text-[11px] uppercase tracking-[0.15em] text-black/40">Escalation</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-semibold tracking-tight tabular-nums">
-                {s.escalation_rate != null ? `${Math.round(s.escalation_rate * 100)}%` : "—"}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        {/* rating */}
+        <StaggerItem className="lg:col-span-3">
+          <SpotlightCard className="h-full p-6">
+            <div className="flex items-center justify-between">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-amber-400/10 text-amber-500">
+                <Star className="size-4" />
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-black/35">rating</span>
+            </div>
+            <p className="mt-5 text-5xl font-semibold tracking-tight">
+              {s.avg_rating_10 != null ? (
+                <AnimatedCounter value={s.avg_rating_10} decimals={1} suffix="/10" duration={1.4} />
+              ) : "—"}
+            </p>
+            <div className="mt-3 flex gap-0.5">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star key={i} className={cn("size-3.5", i < Math.round((s.avg_rating_10 ?? 0) / 2) ? "fill-amber-400 text-amber-400" : "text-black/10")} />
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-black/40">{s.ratings} rated calls</p>
+          </SpotlightCard>
+        </StaggerItem>
 
-        <Card className="card-3d flex flex-col">
-          <CardHeader className="pb-2">
-            <CardDescription className="font-mono text-[11px] uppercase tracking-[0.15em] text-black/40">Verdict mix</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-1 flex-col justify-center gap-3.5">
-            {verdicts.map(([v, n]) => {
-              const pct = Math.round((n / verdictTotal) * 100)
-              const color = v.includes("ALLOW") ? "bg-emerald-500" : v.includes("ESCALATE") ? "bg-amber-500" : v.includes("DENY") ? "bg-red-500" : "bg-slate-400"
-              return (
-                <div key={v}>
-                  <div className="mb-1 flex items-baseline justify-between">
-                    <Badge variant="outline" className={cn("font-mono text-[11px]", verdictClass(v))}>{v}</Badge>
-                    <span className="text-xs tabular-nums text-black/45">{pct}%</span>
+        {/* escalation + containment stacked */}
+        <StaggerItem className="lg:col-span-3">
+          <SpotlightCard className="h-full p-6">
+            <div className="flex items-center justify-between">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600">
+                <Headset className="size-4" />
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-black/35">escalation</span>
+            </div>
+            <p className="mt-5 text-5xl font-semibold tracking-tight">
+              {s.escalation_rate != null ? (
+                <AnimatedCounter value={s.escalation_rate * 100} decimals={0} suffix="%" duration={1.4} />
+              ) : "—"}
+            </p>
+            <p className="mt-3 text-xs text-black/40">routed to human agents</p>
+          </SpotlightCard>
+        </StaggerItem>
+
+        {/* verdict mix — wide bottom strip */}
+        <StaggerItem className="sm:col-span-2 lg:col-span-12">
+          <SpotlightCard className="p-5">
+            <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+              {verdicts.map(([v, n]) => {
+                const pct = Math.round((n / verdictTotal) * 100)
+                const color = v.includes("ALLOW") ? "bg-emerald-500" : v.includes("ESCALATE") ? "bg-amber-500" : v.includes("DENY") ? "bg-red-500" : "bg-slate-400"
+                return (
+                  <div key={v} className="min-w-[180px] flex-1">
+                    <div className="mb-1.5 flex items-center justify-between">
+                      <Badge variant="outline" className={cn("font-mono text-[11px]", verdictClass(v))}>{v}</Badge>
+                      <span className="text-xs tabular-nums text-black/45">{pct}%</span>
+                    </div>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/5">
+                      <div className={cn("h-full rounded-full", color)} style={{ width: `${pct}%` }} />
+                    </div>
                   </div>
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/5">
-                    <div className={cn("h-full rounded-full transition-all", color)} style={{ width: `${pct}%` }} />
-                  </div>
-                </div>
-              )
-            })}
-          </CardContent>
-        </Card>
-      </section>
+                )
+              })}
+            </div>
+          </SpotlightCard>
+        </StaggerItem>
+      </Stagger>
 
       {/* decisions table */}
       <section>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold tracking-tight">Recent decisions</h2>
-          <Button variant="ghost" size="sm" className="text-black/45 transition-colors hover:text-black">
+          <Button variant="ghost" size="sm" className="text-black/45 hover:text-black">
             All decisions <ArrowUpRight className="ml-1 size-3.5" />
           </Button>
         </div>
@@ -308,9 +341,7 @@ export function DashboardPage() {
                 </TableHeader>
                 <TableBody>
                   {calls.slice(0, 10).map((c) => (
-                    <TableRow key={callKey(c)} className={cn(
-                      "transition-colors hover:bg-black/[0.02]",
-                      flashKeys.has(callKey(c)) && "row-flash")}>
+                    <TableRow key={callKey(c)} className={cn("transition-colors hover:bg-black/[0.02]", flashKeys.has(callKey(c)) && "row-flash")}>
                       <TableCell className="pl-6 font-mono text-xs tabular-nums text-black/45">{c.ts.replace("T", " ").slice(0, 16)}</TableCell>
                       <TableCell className="font-mono text-xs">{c.conv_id}</TableCell>
                       <TableCell className="font-medium">{c.action}</TableCell>
@@ -325,15 +356,35 @@ export function DashboardPage() {
         </Card>
       </section>
 
-      {/* quality: LLM-judge rubric scores */}
+      {/* quality: LLM-judge rubric scores — independent, judge is slow */}
       <section>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold tracking-tight">Quality scores</h2>
           <span className="font-mono text-[11px] uppercase tracking-wider text-black/35">
-            {scores.length ? `rubric · ${scores[0]?.source ?? ""}` : "rubric"}
+            {scores && scores.length ? `rubric · ${scores[0]?.source ?? ""}` : scoresError ? "judge unavailable" : "judging…"}
           </span>
         </div>
-        {scores.length === 0 ? (
+        {scoresError ? (
+          <Card className="rounded-xl border-dashed">
+            <CardContent className="flex items-center justify-between gap-4 py-6">
+              <p className="text-sm text-black/55">Judge scoring failed: {scoresError}</p>
+              <Button variant="outline" size="sm" onClick={() => {
+                setScoresError(null); setScores(null)
+                api.scores()
+                  .then((res) => { setScores(res.scores) })
+                  .catch((e) => setScoresError(e instanceof Error ? e.message : String(e)))
+              }}>
+                <RefreshCw className="size-3.5 mr-2" /> Retry
+              </Button>
+            </CardContent>
+          </Card>
+        ) : !scores ? (
+          <div className="grid gap-4 md:grid-cols-3">
+            {[0, 1, 2].map((i) => (
+              <Skeleton key={i} className="h-28 rounded-2xl" />
+            ))}
+          </div>
+        ) : scores.length === 0 ? (
           <Card className="rounded-xl border-dashed">
             <CardContent className="py-8 text-center text-sm text-black/45">
               Per-conversation quality scores appear here once calls are scored by the judge.
@@ -342,19 +393,17 @@ export function DashboardPage() {
         ) : (
           <div className="grid gap-4 md:grid-cols-3">
             {scores.slice(0, 3).map((sc) => (
-              <Card key={sc.conv_id} className="card-3d card-3d-hover">
-                <CardContent className="pt-5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-semibold tracking-tight">
-                      {sc.overall != null ? sc.overall.toFixed(1) : "—"}
-                      <span className="text-sm font-normal text-black/35">/10</span>
-                    </span>
-                    <Badge variant="outline" className="font-mono text-[10px] text-black/45">{sc.source}</Badge>
-                  </div>
-                  <p className="mt-1 font-mono text-xs text-black/40">{sc.conv_id}</p>
-                  <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-black/50">{sc.reasoning}</p>
-                </CardContent>
-              </Card>
+              <SpotlightCard key={sc.conv_id} className="p-5">
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl font-semibold tracking-tight">
+                    {sc.overall != null ? sc.overall.toFixed(1) : "—"}
+                    <span className="text-sm font-normal text-black/35">/10</span>
+                  </span>
+                  <Badge variant="outline" className="font-mono text-[10px] text-black/45">{sc.source}</Badge>
+                </div>
+                <p className="mt-1 font-mono text-xs text-black/40">{sc.conv_id}</p>
+                <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-black/50">{sc.reasoning}</p>
+              </SpotlightCard>
             ))}
           </div>
         )}
@@ -366,21 +415,18 @@ export function DashboardPage() {
           <h2 className="mb-4 text-lg font-semibold tracking-tight">Caller feedback</h2>
           <div className="grid gap-4 md:grid-cols-3">
             {comments.slice(0, 3).map((r) => (
-              <Card key={r.session_id} className="card-3d card-3d-hover">
-                <CardContent className="pt-5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-0.5">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star key={i} className={cn("size-3.5 transition-transform",
-                          i < Math.round(r.rating / 2) ? "fill-amber-400 text-amber-400" : "text-black/15")} />
-                      ))}
-                    </div>
-                    <span className="font-mono text-xs tabular-nums text-black/45">{r.rating}/10</span>
+              <SpotlightCard key={r.session_id} className="p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-0.5">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star key={i} className={cn("size-3.5", i < Math.round(r.rating / 2) ? "fill-amber-400 text-amber-400" : "text-black/15")} />
+                    ))}
                   </div>
-                  <p className="mt-3 text-sm leading-relaxed">“{r.comment}”</p>
-                  <p className="mt-2 font-mono text-[11px] text-black/35">{r.session_id}</p>
-                </CardContent>
-              </Card>
+                  <span className="font-mono text-xs tabular-nums text-black/45">{r.rating}/10</span>
+                </div>
+                <p className="mt-3 text-sm leading-relaxed">“{r.comment}”</p>
+                <p className="mt-2 font-mono text-[11px] text-black/35">{r.session_id}</p>
+              </SpotlightCard>
             ))}
           </div>
         </section>
