@@ -34,7 +34,7 @@ export function ConnectPage() {
   }
 
   const facts = [
-    { icon: LockKeyhole, title: "Fail-closed by design", desc: "The control server refuses to start without a token. Every request is bearer-authenticated." },
+    { icon: LockKeyhole, title: "Fail-closed by design", desc: "No token, no server: the control plane refuses to start without one, and each request must carry it." },
     { icon: Radio, title: "Local by default", desc: "The agent's control API binds to 127.0.0.1 — nothing listens on the public interface." },
     { icon: TerminalSquare, title: "Nothing ships to the console", desc: "Your URL + token live in this browser's localStorage. No server, no logs, no third party." },
   ]

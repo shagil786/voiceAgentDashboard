@@ -29,9 +29,9 @@ const STEPS = ["Feed your business", "Review the proposal", "Approve & go live"]
 
 /** What the compiled agent produces — shown as a live rail beside the form. */
 const OUTPUT_CARD = [
-  { icon: BookOpenText, title: "Knowledge", desc: "What it answers from — your site and description, distilled into facts with sources." },
-  { icon: Wrench, title: "Tools", desc: "What it may do — every action policy-gated, precondition-checked and logged." },
-  { icon: ShieldCheck, title: "Guardrails", desc: "What it can never do — no invented facts, no over-promises, human escalation always open." },
+  { icon: BookOpenText, title: "Knowledge", desc: "Your site and description, distilled into cited facts it answers from." },
+  { icon: Wrench, title: "Tools", desc: "Actions it may take — each policy-gated, precondition-checked, logged." },
+  { icon: ShieldCheck, title: "Guardrails", desc: "No invented facts, no over-promises. Human escalation always open." },
 ]
 
 export function OnboardPage() {
@@ -177,7 +177,7 @@ export function OnboardPage() {
                 </div>
                 <div className="flex items-center justify-between border-t border-black/6 pt-4">
                   <p className="max-w-[55%] text-[12px] leading-relaxed text-black/45">
-                    The preview compiles instantly and writes nothing — you review before anything is approved.
+                    The preview writes nothing — you review before anything is approved.
                   </p>
                   <Button size="lg" onClick={() => void compile()} disabled={!canPreview}
                     className="h-11 rounded-full bg-[#141416] px-6 text-white transition-all hover:bg-black hover:shadow-lg hover:shadow-black/25 disabled:opacity-40">
@@ -304,7 +304,7 @@ export function OnboardPage() {
           <div className="rounded-2xl border border-dashed border-black/12 p-4">
             <p className="flex items-center gap-2 text-[12px] text-black/45">
               <ScrollText className="size-3.5 shrink-0 text-black/30" />
-              Every decision is written to an auditable log — you can always see why the agent acted.
+              Each decision lands in an auditable log, so you can always see why the agent acted.
             </p>
           </div>
         </div>

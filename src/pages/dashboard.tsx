@@ -42,7 +42,7 @@ function Waveform() {
 const STEPS = [
   { icon: PlugZap, title: "Connect", desc: "Point the console at your agent's control API." },
   { icon: ListChecks, title: "Onboard", desc: "Describe your business — the agent compiles its knowledge and tools." },
-  { icon: BarChart3, title: "Operate", desc: "Every call, verdict and rating lands here in real time." },
+  { icon: BarChart3, title: "Operate", desc: "Decisions, ratings and escalations stream in live once the agent runs." },
 ]
 
 export function DashboardPage() {
