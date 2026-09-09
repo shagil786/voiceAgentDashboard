@@ -1,24 +1,28 @@
 import { useEffect, useRef } from "react"
 
 /**
- * Interactive audio visualizer (canvas) — the console's ambient soul.
+ * "Signal network" — ambient constellation for the console canvas.
  *
- * - Bottom equalizer field: ~72 bars breathing with layered sine motion,
- *   warm orange, clearly visible but living BEHIND content (z-0, content z-10).
- * - Mouse-reactive: bars swell near the cursor and follow its X position.
- * - Click: an impulse ripples outward from the click point.
- * - Drifting particles gently pushed by the cursor; sonar rings stay.
- * - prefers-reduced-motion: bars render static (no rAF loop).
- * - Fixed to the viewport, right of the dark sidebar (md: left 248px).
+ * Concept: the platform as a living mesh of conversations. Dots (agents /
+ * calls) drift slowly; nearby dots link with hairlines; every few seconds a
+ * pulse ignites at one node and travels along a link to a neighbour — like a
+ * governed decision moving through the system. The mouse gently warms the
+ * network near the cursor.
+ *
+ * Deliberately NOT an equalizer/waveform (that motif belongs to the voice
+ * moments). Warm ink-toned hairlines + faint orange nodes stay under the
+ * content (z-0; content z-10), fixed right of the dark sidebar.
+ *
+ * prefers-reduced-motion: renders a single static frame.
  */
 
-const BAR_COUNT = 72
-const RING_COUNT = 3
-const PARTICLE_COUNT = 22
+const NODE_COUNT = 34
+const LINK_DIST = 170
+const PULSE_INTERVAL_MS = 1400
 const ACCENT = "255, 87, 1"
 
-interface Ripple { x: number; born: number }
-interface Particle { x: number; y: number; r: number; vx: number; vy: number }
+interface Node { x: number; y: number; vx: number; vy: number; r: number; hue: number }
+interface Pulse { ax: number; ay: number; bx: number; by: number; born: number; dur: number }
 
 function prefersReduced(): boolean {
   return typeof window !== "undefined" &&
@@ -40,8 +44,6 @@ export function Soundscape() {
     const dpr = Math.min(2, window.devicePixelRatio || 1)
     const reduced = prefersReduced()
     const mouse = { x: -9999, y: -9999, inside: false }
-    let ripples: Ripple[] = []
-    const particles: Particle[] = []
 
     const size = () => {
       const rect = canvas.getBoundingClientRect()
@@ -62,136 +64,115 @@ export function Soundscape() {
       mouse.inside = mouse.x >= 0 && mouse.x <= rect.width && mouse.y >= 0 && mouse.y <= rect.height
     }
     const onLeave = () => { mouse.inside = false; mouse.x = -9999 }
-    const onClick = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect()
-      const x = e.clientX - rect.left
-      if (x >= 0 && x <= rect.width) ripples.push({ x, born: performance.now() })
-    }
     window.addEventListener("mousemove", onMove, { passive: true })
     window.addEventListener("mouseleave", onLeave)
-    window.addEventListener("click", onClick)
 
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      particles.push({
-        x: (i * 53) % 100,
-        y: 18 + ((i * 31) % 70),
-        r: 1.2 + (i % 3) * 0.7,
-        vx: (i % 2 ? 1 : -1) * (0.02 + (i % 4) * 0.012),
-        vy: -(0.03 + (i % 5) * 0.014),
+    // nodes spread over the full canvas (not just bottom)
+    const nodes: Node[] = []
+    for (let i = 0; i < NODE_COUNT; i++) {
+      nodes.push({
+        x: 3 + Math.random() * 94,
+        y: 5 + Math.random() * 90,
+        vx: (Math.random() - 0.5) * 0.012,
+        vy: (Math.random() - 0.5) * 0.012,
+        r: 1.1 + Math.random() * 1.4,
+        hue: Math.random(),
       })
     }
 
-    const bars: { x: number; w: number }[] = []
-    const layoutBars = () => {
-      bars.length = 0
-      const gap = 6
-      const bw = Math.max(2.5, (width - 40) / BAR_COUNT - gap)
-      for (let i = 0; i < BAR_COUNT; i++) bars.push({ x: 20 + i * (bw + gap), w: bw })
-    }
-    layoutBars()
-    const ro2 = new ResizeObserver(layoutBars)
-    ro2.observe(canvas)
+    let lastPulse = 0
+    const pulses: Pulse[] = []
 
     const t0 = performance.now()
 
     function draw(t: number) {
-      const elapsed = (t - t0) / 1000
       ctx.clearRect(0, 0, width, height)
-      const fieldH = Math.min(160, height * 0.8)
 
-      // equalizer bars
-      for (let i = 0; i < bars.length; i++) {
-        const b = bars[i]
-        const cx = b.x + b.w / 2
-        const s1 = Math.sin(elapsed * 1.7 + i * 0.55)
-        const s2 = Math.sin(elapsed * 3.1 + i * 0.23)
-        const s3 = Math.sin(elapsed * 0.7 + i * 0.9)
-        let amp = 0.3 + 0.32 * s1 + 0.2 * s2 + 0.18 * s3
-        amp = Math.max(0.08, Math.min(1, amp))
+      // update node drift (bounded wander)
+      for (const n of nodes) {
+        n.x += n.vx
+        n.y += n.vy
+        if (n.x < 2 || n.x > 98) n.vx *= -1
+        if (n.y < 2 || n.y > 96) n.vy *= -1
+        n.x = Math.max(1, Math.min(99, n.x))
+        n.y = Math.max(1, Math.min(97, n.y))
+      }
 
-        // cursor proximity surge
-        let surge = 0
-        if (mouse.inside) {
-          const d = Math.abs(cx - mouse.x)
-          surge = Math.max(0, 1 - d / 260) * 0.9
-          // travelling wave follows cursor X
-          const wave = Math.sin(cx * 0.03 - elapsed * 6)
-          const fall = Math.max(0, 1 - Math.abs(cx - mouse.x) / 400)
-          surge = Math.max(surge, wave * fall * 0.6)
-        }
-        // click ripples: lift decaying over time & distance
-        let rippleBoost = 0
-        for (const rp of ripples) {
-          const age = (t - rp.born) / 1000
-          if (age < 0.9) {
-            const dist = Math.abs(cx - rp.x)
-            rippleBoost = Math.max(rippleBoost, Math.max(0, 1 - dist / 520) * (1 - age / 0.9))
+      // spawn pulses
+      if (!reduced && t - lastPulse > PULSE_INTERVAL_MS) {
+        lastPulse = t
+        const a = nodes[Math.floor(Math.random() * nodes.length)]
+        // pick a neighbour within link range, else random
+        let b = nodes[Math.floor(Math.random() * nodes.length)]
+        const candidates = nodes.filter((o) => {
+          const d = Math.hypot(o.x - a.x, o.y - a.y)
+          return d > 4 && d < (LINK_DIST / 100) * 3
+        })
+        if (candidates.length) b = candidates[Math.floor(Math.random() * candidates.length)]
+        const dur = 1100 + Math.random() * 700
+        pulses.push({ ax: a.x, ay: a.y, bx: b.x, by: b.y, born: t, dur })
+      }
+      pulses.splice(0, pulses.length)
+      for (let i = pulses.length - 1; i >= 0; i--) {
+        if (t - pulses[i].born > pulses[i].dur) pulses.splice(i, 1)
+      }
+
+      const px = (v: number) => (v / 100) * width
+      const py = (v: number) => (v / 100) * height
+
+      // links between close nodes
+      ctx.lineWidth = 0.7
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const a = nodes[i], b = nodes[j]
+          const d = Math.hypot(a.x - b.x, a.y - b.y) * 100
+          if (d < LINK_DIST) {
+            const strength = (1 - d / LINK_DIST) * 0.55
+            ctx.strokeStyle = `rgba(20, 20, 22, ${strength * 0.1})`
+            ctx.beginPath()
+            ctx.moveTo(px(a.x), py(a.y))
+            ctx.lineTo(px(b.x), py(b.y))
+            ctx.stroke()
           }
         }
+      }
 
-        const h = Math.min(fieldH, Math.max(3, (amp + surge * 0.35 + rippleBoost * 0.6) * fieldH))
-        const alpha = mouse.inside && Math.abs(cx - mouse.x) < 260 ? 0.4 : 0.26
-        const grad = ctx.createLinearGradient(0, 0, 0, fieldH)
-        grad.addColorStop(0, `rgba(${ACCENT}, 0.03)`)
-        grad.addColorStop(0.7, `rgba(${ACCENT}, ${alpha * 0.75})`)
-        grad.addColorStop(1, `rgba(${ACCENT}, ${alpha})`)
-        ctx.fillStyle = grad
+      // nodes
+      for (const n of nodes) {
+        const nx = px(n.x)
+        const ny = py(n.y)
+        let glow = 0
+        if (mouse.inside) {
+          const d = Math.hypot(nx - mouse.x, ny - mouse.y)
+          if (d < 160) glow = (1 - d / 160) * 0.7
+        }
+        // nodes near the active path warm toward orange
+        ctx.fillStyle = `rgba(${ACCENT}, ${0.1 + glow * 0.3})`
         ctx.beginPath()
-        ctx.roundRect(b.x, height - 8 - h, b.w, h, b.w / 2)
+        ctx.arc(nx, ny, n.r + glow * 1.6, 0, Math.PI * 2)
         ctx.fill()
       }
 
-      // particles (drift + cursor push)
-      for (const p of particles) {
-        p.x += p.vx
-        p.y += p.vy
-        if (p.y < -4) p.y = 98 + Math.random() * 4
-        if (p.x > 102) p.x = -2
-        if (p.x < -2) p.x = 102
-        const px = (p.x / 100) * width
-        const py = (p.y / 100) * height
-        if (mouse.inside) {
-          const dx = px - mouse.x
-          const dy = py - mouse.y
-          const dist = Math.hypot(dx, dy)
-          if (dist < 130 && dist > 0.01) {
-            const push = (1 - dist / 130) * 0.05
-            p.vx += (dx / dist) * push
-            p.vy += (dy / dist) * push
-          }
-        }
-        p.vx = Math.max(-0.12, Math.min(0.12, p.vx * 0.99))
-        p.vy = Math.max(-0.14, Math.min(0.06, p.vy * 0.99))
-        ctx.fillStyle = `rgba(${ACCENT}, 0.15)`
+      // travelling pulses
+      for (const p of pulses) {
+        const prog = Math.min(1, (t - p.born) / p.dur)
+        const eased = 1 - Math.pow(1 - prog, 2)
+        const x = px(p.ax + (p.bx - p.ax) * eased)
+        const y = py(p.ay + (p.by - p.ay) * eased)
+        const halo = 0.5 - Math.abs(prog - 0.5)
+        ctx.fillStyle = `rgba(${ACCENT}, ${0.12 + halo * 0.5})`
         ctx.beginPath()
-        ctx.arc(px, py, p.r, 0, Math.PI * 2)
+        ctx.arc(x, y, 2.6 + halo * 2.4, 0, Math.PI * 2)
         ctx.fill()
       }
 
-      // sonar rings (bottom-left)
-      for (let i = 0; i < RING_COUNT; i++) {
-        const phase = (elapsed * 0.22 + i / RING_COUNT) % 1
-        const sizePx = 40 + phase * 180
-        ctx.strokeStyle = `rgba(${ACCENT}, ${(1 - phase) * 0.18})`
-        ctx.lineWidth = 1.5
-        ctx.beginPath()
-        ctx.arc(30, height - 24, sizePx, 0, Math.PI * 2)
-        ctx.stroke()
-      }
-
-      ripples = ripples.filter((rp) => (t - rp.born) / 1000 < 0.9)
-      raf = requestAnimationFrame(draw)
+      if (!reduced) raf = requestAnimationFrame(draw)
     }
 
     if (reduced) {
-      // static visible bars, no loop
-      for (const b of bars) {
-        const h = 22 + ((b.x * 7) % 70)
-        ctx.fillStyle = `rgba(${ACCENT}, 0.18)`
-        ctx.beginPath()
-        ctx.roundRect(b.x, height - 8 - h, b.w, h, b.w / 2)
-        ctx.fill()
-      }
+      // one static frame of the network
+      draw(t0)
+      cancelAnimationFrame(raf)
     } else {
       raf = requestAnimationFrame(draw)
     }
@@ -199,10 +180,8 @@ export function Soundscape() {
     return () => {
       cancelAnimationFrame(raf)
       ro.disconnect()
-      ro2.disconnect()
       window.removeEventListener("mousemove", onMove)
       window.removeEventListener("mouseleave", onLeave)
-      window.removeEventListener("click", onClick)
     }
   }, [])
 
@@ -210,7 +189,7 @@ export function Soundscape() {
     <canvas
       ref={canvasRef}
       aria-hidden
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-0 h-[190px] w-full md:left-[248px] md:w-[calc(100%-248px)]"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-0 h-full w-full md:left-[248px] md:w-[calc(100%-248px)]"
     />
   )
 }
