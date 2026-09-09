@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom"
+import { Soundscape } from "@/components/soundscape"
 import { LayoutDashboard, Sparkles, Settings, Radio, Zap } from "lucide-react"
 import { cn } from "cn"
 
@@ -118,6 +119,8 @@ export function Shell() {
           <div
             className="pointer-events-none absolute inset-0 opacity-[0.35]"
             style={{ backgroundImage: "radial-gradient(rgba(20,20,22,0.09) 0.6px, transparent 0.6px)", backgroundSize: "22px 22px" }} />
+          {/* ambient soundscape: equalizer strip, voice rings, drifting warmth */}
+          <Soundscape />
           <div className="relative mx-auto w-full max-w-6xl px-5 pb-16 pt-20 md:px-8 md:pt-10">
             <Outlet />
           </div>

@@ -42,6 +42,37 @@
   h1, h2, h3 { letter-spacing: -0.02em; }
 }
 
+/* ── ambient soundscape (decorative, behind content) ────────── */
+@keyframes eq-bar {
+  0%, 100% { transform: scaleY(0.25); }
+  50% { transform: scaleY(1); }
+}
+@keyframes ring-pulse {
+  0% { transform: scale(0.55); opacity: 0.35; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+@keyframes drift {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -8px, 0); }
+}
+.eq-bar {
+  width: 3px;
+  border-radius: 999px;
+  transform-origin: bottom;
+  animation: eq-bar var(--eq-dur, 1.4s) ease-in-out infinite;
+}
+.snd-ring {
+  position: absolute;
+  border-radius: 9999px;
+  border: 1.5px solid rgba(255, 87, 1, 0.35);
+  animation: ring-pulse var(--ring-dur, 5s) cubic-bezier(0.25, 0.6, 0.35, 1) infinite;
+}
+.drift-dot {
+  position: absolute;
+  border-radius: 9999px;
+  animation: drift var(--drift-dur, 9s) ease-in-out infinite;
+}
+
 /* Elevated '3D' card: white surface, soft inner highlight, layered depth
    shadows (no hard outline). Hover raises the card slightly. */
 @layer utilities {
