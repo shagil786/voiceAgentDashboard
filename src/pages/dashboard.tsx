@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -7,76 +7,19 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { RefreshCw, TrendingUp, Star, Headset, PhoneCall, ArrowUpRight, PlugZap } from "lucide-react"
+import { RefreshCw, ArrowUpRight, PlugZap, Star } from "lucide-react"
 import { api, getConfig, type CallRow, type RatingRow, type Summary } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
 type Data = { summary: Summary; calls: CallRow[]; ratings: RatingRow[] }
-type Phase = "loading" | "live" | "empty" | "demo" | "error"
+type Phase = "loading" | "live" | "empty" | "error"
 
 function verdictClass(v: string) {
   const s = v.toUpperCase()
-  if (s.includes("ALLOW")) return "text-emerald-600"
-  if (s.includes("ESCALATE")) return "text-amber-600"
-  if (s.includes("DENY")) return "text-red-600"
+  if (s.includes("ALLOW")) return "text-emerald-600 border-emerald-200"
+  if (s.includes("ESCALATE")) return "text-amber-600 border-amber-200"
+  if (s.includes("DENY")) return "text-red-600 border-red-200"
   return ""
-}
-
-function KpiSkeleton() {
-  return (
-    <Card>
-      <CardContent className="pt-5">
-        <Skeleton className="h-3 w-24" />
-        <Skeleton className="mt-3 h-8 w-20" />
-        <Skeleton className="mt-2 h-3 w-28" />
-      </CardContent>
-    </Card>
-  )
-}
-
-function Kpi({ label, value, icon: Icon, hint, accent }: {
-  label: string; value: string; icon: typeof PhoneCall; hint: string; accent?: boolean
-}) {
-  return (
-    <Card>
-      <CardContent className="pt-5">
-        <div className="flex items-center justify-between">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
-          <Icon className={cn("size-4", accent ? "text-primary" : "text-muted-foreground")} />
-        </div>
-        <p className="mt-2 text-3xl font-semibold tracking-tight">{value}</p>
-        <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
-      </CardContent>
-    </Card>
-  )
-}
-
-function EmptyState({ onConnect }: { onConnect: () => void }) {
-  return (
-    <Card className="border-dashed">
-      <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-muted">
-          <PlugZap className="size-6 text-muted-foreground" />
-        </div>
-        <h3 className="text-lg font-semibold">No agent connected</h3>
-        <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-          Connect this console to your agent's control API and real call data —
-          decisions, ratings, escalations — will appear here as calls happen.
-        </p>
-        <Button className="mt-6" onClick={onConnect}>
-          <PlugZap className="size-4 mr-2" /> Connect an agent
-        </Button>
-      </CardContent>
-    </Card>
-  )
-}
-
-function TableSkeleton() {
-  return (
-    <div className="space-y-2">
-      {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
-    </div>
-  )
 }
 
 export function DashboardPage() {
@@ -90,7 +33,7 @@ export function DashboardPage() {
     try {
       const [summary, calls, ratings] = await Promise.all([api.summary(), api.calls(100), api.ratings(50)])
       setData({ summary, calls: calls.calls, ratings: ratings.ratings })
-      setPhase(summary.calls > 0 ? "live" : "empty")
+      setPhase("live")
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
       setPhase("error")
@@ -100,36 +43,33 @@ export function DashboardPage() {
 
   const goToConnect = () => { window.location.href = "/connect" }
 
-  // loading: skeletons, no fake data
   if (phase === "loading") {
     return (
-      <div className="space-y-8">
-        <header>
-          <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Reading your agent's decision log…</p>
-        </header>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => <KpiSkeleton key={i} />)}
+      <div className="space-y-10">
+        <Skeleton className="h-5 w-40" />
+        <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr_1fr]">
+          <Skeleton className="h-40 rounded-xl" />
+          <Skeleton className="h-40 rounded-xl" />
+          <Skeleton className="h-40 rounded-xl" />
         </div>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Recent decisions</CardTitle>
-            <CardDescription>Loading governed decisions…</CardDescription>
-          </CardHeader>
-          <CardContent><TableSkeleton /></CardContent>
-        </Card>
+        <Skeleton className="h-64 rounded-xl" />
       </div>
     )
   }
 
-  // not connected / empty store: honest empty states
   if (phase === "empty") {
     return (
-      <div className="space-y-8">
-        <header>
-          <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
-        </header>
-        <EmptyState onConnect={goToConnect} />
+      <div className="mx-auto flex min-h-[50vh] max-w-lg flex-col items-center justify-center text-center">
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">Overview</p>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight">Your console is empty — on purpose.</h1>
+        <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
+          No agent is connected yet. Once one is, every governed decision, caller rating and
+          escalation lands here in real time. Nothing fake, ever.
+        </p>
+        <Button className="mt-8 h-11 px-6" onClick={goToConnect}>
+          <PlugZap className="mr-2 size-4" /> Connect your agent
+        </Button>
+        <p className="mt-6 font-mono text-xs text-muted-foreground">01 / connect · 02 / onboard · 03 / operate</p>
       </div>
     )
   }
@@ -137,9 +77,6 @@ export function DashboardPage() {
   if (phase === "error") {
     return (
       <div className="space-y-8">
-        <header>
-          <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
-        </header>
         <Alert variant="destructive">
           <AlertTitle>Couldn't reach the agent</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
@@ -152,27 +89,23 @@ export function DashboardPage() {
     )
   }
 
-  // live (or store-present-but-empty handled above)
+  // live
   const { summary: s, calls, ratings } = data!
   const verdictTotal = Math.max(1, Object.values(s.verdicts).reduce((a, b) => a + b, 0))
   const verdicts = Object.entries(s.verdicts).sort((a, b) => b[1] - a[1])
   const comments = ratings.filter((r) => r.comment)
 
-  const kpis = [
-    { label: "Calls handled", value: s.calls.toLocaleString(), icon: PhoneCall, hint: `${s.conversations.toLocaleString()} conversations`, accent: false },
-    { label: "Avg rating", value: s.avg_rating_10 != null ? `${s.avg_rating_10.toFixed(1)}/10` : "–", icon: Star, hint: `${s.ratings} rated calls`, accent: false },
-    { label: "Escalation", value: s.escalation_rate != null ? `${Math.round(s.escalation_rate * 100)}%` : "–", icon: Headset, hint: "to human agents", accent: false },
-    { label: "Allow rate", value: `${Math.round(((s.verdicts.ALLOW || 0) / verdictTotal) * 100)}%`, icon: TrendingUp, hint: "governed decisions", accent: true },
-  ]
-
   return (
-    <div className="space-y-8">
-      <header className="flex items-start justify-between gap-4">
+    <div className="space-y-10">
+      <header className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
-          <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-            Live from your agent's decision log
+          <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">Overview</p>
+          <p className="mt-1 flex items-center gap-2 text-sm">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+            </span>
+            Live from the decision log
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={() => void load()} disabled={false}>
@@ -180,42 +113,107 @@ export function DashboardPage() {
         </Button>
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {kpis.map(({ label, value, icon: Icon, hint, accent }) => (
-          <Kpi key={label} label={label} value={value} icon={Icon} hint={hint} accent={accent} />
-        ))}
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader className="flex-row items-center justify-between space-y-0">
-            <div>
-              <CardTitle className="text-base">Recent decisions</CardTitle>
-              <CardDescription>Every governed action is policy-gated and logged.</CardDescription>
-            </div>
-            <Button variant="ghost" size="sm" className="text-muted-foreground">View all <ArrowUpRight className="size-3.5 ml-1" /></Button>
+      {/* hero metrics: big numeric panel + two stacked, asymmetric */}
+      <section className="grid gap-6 lg:grid-cols-[1.35fr_1fr_1fr]">
+        <Card className="relative overflow-hidden">
+          <div className="absolute -right-8 -top-8 size-40 rounded-full bg-primary/5" />
+          <CardHeader className="pb-2">
+            <CardDescription className="font-mono text-xs uppercase tracking-[0.15em]">Calls handled</CardDescription>
           </CardHeader>
           <CardContent>
+            <p className="text-6xl font-semibold tracking-[-0.03em] tabular-nums">{s.calls.toLocaleString()}</p>
+            <p className="mt-3 text-sm text-muted-foreground">
+              across <span className="font-medium text-foreground">{s.conversations.toLocaleString()}</span> conversations
+              · <span className="font-medium text-foreground">{Math.round(((s.verdicts.ALLOW || 0) / verdictTotal) * 100)}%</span> allowed
+            </p>
+          </CardContent>
+        </Card>
+
+        <div className="grid gap-6">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription className="flex items-center justify-between font-mono text-xs uppercase tracking-[0.15em]">
+                Avg rating <Star className="size-3.5 fill-amber-400 text-amber-400" />
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-4xl font-semibold tracking-tight tabular-nums">
+                {s.avg_rating_10 != null ? s.avg_rating_10.toFixed(1) : "—"}
+                {s.avg_rating_10 != null && <span className="text-lg font-normal text-muted-foreground">/10</span>}
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground">{s.ratings} rated calls</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription className="font-mono text-xs uppercase tracking-[0.15em]">Escalation</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-4xl font-semibold tracking-tight tabular-nums">
+                {s.escalation_rate != null ? `${Math.round(s.escalation_rate * 100)}%` : "—"}
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground">routed to humans</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="flex flex-col">
+          <CardHeader className="pb-2">
+            <CardDescription className="font-mono text-xs uppercase tracking-[0.15em]">Verdict mix</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-1 flex-col justify-center gap-4">
+            {verdicts.map(([v, n]) => {
+              const pct = Math.round((n / verdictTotal) * 100)
+              const color = v.includes("ALLOW") ? "bg-emerald-500" : v.includes("ESCALATE") ? "bg-amber-500" : v.includes("DENY") ? "bg-red-500" : "bg-slate-400"
+              return (
+                <div key={v}>
+                  <div className="mb-1.5 flex items-baseline justify-between">
+                    <Badge variant="outline" className={cn("font-mono text-[11px]", verdictClass(v))}>{v}</Badge>
+                    <span className="text-xs tabular-nums text-muted-foreground">{pct}%</span>
+                  </div>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                    <div className={cn("h-full rounded-full", color)} style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              )
+            })}
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* decisions table */}
+      <section>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold tracking-tight">Recent decisions</h2>
+          <Button variant="ghost" size="sm" className="text-muted-foreground">
+            All decisions <ArrowUpRight className="ml-1 size-3.5" />
+          </Button>
+        </div>
+        <Card>
+          <CardContent className="px-0">
             {calls.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">
+              <p className="py-10 text-center text-sm text-muted-foreground">
                 No decisions logged yet — they appear as your agent handles calls.
               </p>
             ) : (
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Time</TableHead><TableHead>Conversation</TableHead>
-                    <TableHead>Action</TableHead><TableHead>Verdict</TableHead><TableHead>Reason</TableHead>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="pl-6">Time</TableHead>
+                    <TableHead>Conversation</TableHead>
+                    <TableHead>Action</TableHead>
+                    <TableHead>Verdict</TableHead>
+                    <TableHead className="pr-6">Reason</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {calls.slice(0, 8).map((c) => (
                     <TableRow key={c.conv_id + c.ts}>
-                      <TableCell className="font-mono text-xs">{c.ts.replace("T", " ").slice(0, 16)}</TableCell>
+                      <TableCell className="pl-6 font-mono text-xs tabular-nums text-muted-foreground">{c.ts.replace("T", " ").slice(0, 16)}</TableCell>
                       <TableCell className="font-mono text-xs">{c.conv_id}</TableCell>
-                      <TableCell>{c.action}</TableCell>
-                      <TableCell><Badge variant="outline" className={verdictClass(c.verdict)}>{c.verdict}</Badge></TableCell>
-                      <TableCell className="max-w-[200px] truncate text-muted-foreground">{(c.reasons || []).join("; ")}</TableCell>
+                      <TableCell className="font-medium">{c.action}</TableCell>
+                      <TableCell><Badge variant="outline" className={cn("font-mono text-[11px]", verdictClass(c.verdict))}>{c.verdict}</Badge></TableCell>
+                      <TableCell className="max-w-[220px] truncate pr-6 text-muted-foreground">{(c.reasons || []).join("; ") || "—"}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -223,56 +221,33 @@ export function DashboardPage() {
             )}
           </CardContent>
         </Card>
+      </section>
 
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Verdict mix</CardTitle>
-              <CardDescription>Share of governed outcomes</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {verdicts.length === 0 && <p className="text-sm text-muted-foreground">No decisions yet.</p>}
-              {verdicts.map(([v, n]) => {
-                const pct = Math.round((n / verdictTotal) * 100)
-                const color = v.includes("ALLOW") ? "bg-emerald-500" : v.includes("ESCALATE") ? "bg-amber-500" : v.includes("DENY") ? "bg-red-500" : "bg-muted-foreground"
-                return (
-                  <div key={v}>
-                    <div className="mb-1 flex justify-between text-xs">
-                      <span className="font-medium">{v}</span><span className="text-muted-foreground">{n.toLocaleString()} · {pct}%</span>
-                    </div>
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                      <div className={cn("h-full rounded-full", color)} style={{ width: `${pct}%` }} />
-                    </div>
-                  </div>
-                )
-              })}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Caller feedback</CardTitle>
-              <CardDescription>{comments.length ? `${comments.length} comments` : "no comments yet"}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {comments.length === 0 && (
-                <p className="text-sm text-muted-foreground">Ratings with comments appear here once callers leave feedback.</p>
-              )}
-              {comments.slice(0, 3).map((r) => (
-                <div key={r.session_id} className="rounded-lg border p-3">
+      {/* feedback strip */}
+      {comments.length > 0 && (
+        <section>
+          <h2 className="mb-4 text-lg font-semibold tracking-tight">Caller feedback</h2>
+          <div className="grid gap-4 md:grid-cols-3">
+            {comments.slice(0, 3).map((r) => (
+              <Card key={r.session_id}>
+                <CardContent className="pt-5">
                   <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1 text-sm font-medium">
-                      <Star className="size-3.5 fill-amber-400 text-amber-400" /> {r.rating}/10
-                    </span>
-                    <span className="font-mono text-xs text-muted-foreground">{r.session_id}</span>
+                    <div className="flex items-center gap-0.5">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star key={i} className={cn("size-3.5",
+                          i < Math.round(r.rating / 2) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30")} />
+                      ))}
+                    </div>
+                    <span className="font-mono text-xs tabular-nums text-muted-foreground">{r.rating}/10</span>
                   </div>
-                  <p className="mt-1 text-sm text-muted-foreground">“{r.comment}”</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+                  <p className="mt-3 text-sm leading-relaxed">“{r.comment}”</p>
+                  <p className="mt-2 font-mono text-xs text-muted-foreground">{r.session_id}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   )
 }
