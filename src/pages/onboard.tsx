@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Loader2, Rocket, Sparkles, FileText, PlugZap, ShieldCheck, BookOpenText, Wrench, ScrollText } from "lucide-react"
 import { api, getConfig } from "@/lib/api"
 import { cn } from "@/lib/utils"
+import { MagneticButton, Stagger, StaggerItem } from "@/components/motion-primitives"
 
 interface Preview {
   tools: { name: string; state: string; description?: string }[]
@@ -79,6 +80,8 @@ export function OnboardPage() {
 
   return (
     <div className="space-y-8">
+      <Stagger className="space-y-8" delay={0.03}>
+      <StaggerItem>
       <header className="max-w-2xl">
         <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#ff5701]">New agent</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">Describe your business.</h1>
@@ -111,6 +114,8 @@ export function OnboardPage() {
           )
         })}
       </ol>
+      </StaggerItem>
+      </Stagger>
 
       {err && (
         <Alert variant="destructive">
@@ -179,11 +184,13 @@ export function OnboardPage() {
                   <p className="max-w-[55%] text-[12px] leading-relaxed text-black/45">
                     The preview writes nothing — you review before anything is approved.
                   </p>
+                  <MagneticButton strength={0.12}>
                   <Button size="lg" onClick={() => void compile()} disabled={!canPreview}
-                    className="h-11 rounded-full bg-[#141416] px-6 text-white transition-all hover:bg-black hover:shadow-lg hover:shadow-black/25 disabled:opacity-40">
+                    className="h-11 rounded-full bg-[#141416] px-6 text-white shadow-[0_8px_30px_-12px_rgba(20,20,22,0.5)] transition-all hover:bg-black hover:shadow-[0_14px_40px_-12px_rgba(20,20,22,0.6)] disabled:opacity-40">
                     {busy && <Loader2 className="size-4 mr-2 animate-spin" />}
                     Preview <span className="ml-1">→</span>
                   </Button>
+                  </MagneticButton>
                 </div>
               </CardContent>
             </Card>
@@ -246,11 +253,13 @@ export function OnboardPage() {
                 </section>
                 <div className="flex items-center justify-between border-t border-black/6 pt-4">
                   <Button variant="ghost" onClick={() => setStage(1)} className="text-black/60 hover:bg-black/5 hover:text-black">← Edit input</Button>
+                  <MagneticButton strength={0.12}>
                   <Button size="lg" onClick={() => void approve()} disabled={!canApprove}
-                    className="h-11 rounded-full bg-[#141416] px-6 text-white transition-all hover:bg-black hover:shadow-lg hover:shadow-black/25">
+                    className="h-11 rounded-full bg-[#141416] px-6 text-white shadow-[0_8px_30px_-12px_rgba(20,20,22,0.5)] transition-all hover:bg-black hover:shadow-[0_14px_40px_-12px_rgba(20,20,22,0.6)]">
                     {busy && <Loader2 className="size-4 mr-2 animate-spin" />}
                     Approve &amp; deploy <Rocket className="ml-2 size-4" />
                   </Button>
+                  </MagneticButton>
                 </div>
               </CardContent>
             </Card>

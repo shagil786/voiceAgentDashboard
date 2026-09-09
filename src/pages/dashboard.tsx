@@ -341,8 +341,8 @@ export function DashboardPage() {
                 </TableHeader>
                 <TableBody>
                   {calls.slice(0, 10).map((c) => (
-                    <TableRow key={callKey(c)} className={cn("transition-colors hover:bg-black/[0.02]", flashKeys.has(callKey(c)) && "row-flash")}>
-                      <TableCell className="pl-6 font-mono text-xs tabular-nums text-black/45">{c.ts.replace("T", " ").slice(0, 16)}</TableCell>
+                    <TableRow key={callKey(c)} className={cn("group/row transition-all hover:bg-black/[0.045]", flashKeys.has(callKey(c)) && "row-flash")}>
+                      <TableCell className="pl-6 font-mono text-xs tabular-nums text-black/45 transition-colors group-hover/row:text-[#ff5701]">{c.ts.replace("T", " ").slice(0, 16)}</TableCell>
                       <TableCell className="font-mono text-xs">{c.conv_id}</TableCell>
                       <TableCell className="font-medium">{c.action}</TableCell>
                       <TableCell><Badge variant="outline" className={cn("font-mono text-[11px]", verdictClass(c.verdict))}>{c.verdict}</Badge></TableCell>

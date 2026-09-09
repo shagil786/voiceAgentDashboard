@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Loader2, PlugZap, CheckCircle2, XCircle, TerminalSquare, LockKeyhole, Radio } from "lucide-react"
 import { api, getConfig, saveConfig, type StatusInfo } from "@/lib/api"
+import { MagneticButton, Stagger, StaggerItem } from "@/components/motion-primitives"
 import { useNavigate } from "react-router-dom"
 
 export function ConnectPage() {
@@ -42,7 +43,8 @@ export function ConnectPage() {
   return (
     <div className="grid gap-8 lg:grid-cols-[1.5fr_1fr]">
       {/* left column */}
-      <div className="space-y-6">
+      <Stagger className="space-y-6" delay={0.05}>
+        <StaggerItem>
         <header>
           <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#ff5701]">Connection</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">Link the console to your agent.</h1>
@@ -51,6 +53,7 @@ export function ConnectPage() {
             and drives its onboarding compiler.
           </p>
         </header>
+        </StaggerItem>
 
         {err && (
           <Alert variant="destructive">
@@ -85,16 +88,19 @@ export function ConnectPage() {
                 onChange={(e) => setToken(e.target.value)} autoComplete="off"
                 className="h-11 rounded-xl border-black/10 bg-white font-mono shadow-none focus-visible:border-[#ff5701] focus-visible:ring-[#ff5701]/20" />
             </div>
-            <Button className="h-11 w-full rounded-full bg-[#141416] text-white transition-all hover:bg-black hover:shadow-lg hover:shadow-black/25" onClick={() => void connect()} disabled={busy}>
-              {busy && <Loader2 className="size-4 mr-2 animate-spin" />}
-              {busy ? "Checking…" : "Test connection"}
-            </Button>
+            <MagneticButton strength={0.12} className="w-full">
+              <Button className="h-11 w-full rounded-full bg-[#141416] text-white shadow-[0_8px_30px_-12px_rgba(20,20,22,0.5)] transition-all hover:bg-black hover:shadow-[0_14px_40px_-12px_rgba(20,20,22,0.6)]" onClick={() => void connect()} disabled={busy}>
+                {busy && <Loader2 className="size-4 mr-2 animate-spin" />}
+                {busy ? "Checking…" : "Test connection"}
+              </Button>
+            </MagneticButton>
           </CardContent>
         </Card>
-      </div>
+      </Stagger>
 
       {/* right rail */}
-      <div className="space-y-4 lg:pt-16">
+      <Stagger className="space-y-4 lg:pt-16" delay={0.15}>
+        <StaggerItem>
         <div className="rounded-2xl bg-[#141416] p-5 text-white shadow-[0_20px_50px_-28px_rgba(0,0,0,0.5)]">
           <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">Run on the agent machine</p>
           <p className="mt-2 text-[13px] leading-relaxed text-white/65">In the <code className="rounded bg-white/10 px-1 font-mono text-[12px] text-white">voiceAgent</code> repo:</p>
@@ -103,8 +109,10 @@ VOICEAGENT_AUDIT_DB=data/out/audit.sqlite \\
 .venv/bin/python scripts/control_server.py \\\\
   8081 127.0.0.1`}</pre>
         </div>
+        </StaggerItem>
         {facts.map(({ icon: Icon, title, desc }) => (
-          <div key={title} className="card-3d card-3d-hover group flex gap-3 p-4">
+          <StaggerItem key={title}>
+          <div className="card-3d card-3d-hover group flex gap-3 p-4">
             <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg bg-black/[0.04] text-black/60 transition-colors group-hover:bg-[#ff5701]/10 group-hover:text-[#ff5701]">
               <Icon className="size-3.5" />
             </span>
@@ -113,8 +121,9 @@ VOICEAGENT_AUDIT_DB=data/out/audit.sqlite \\
               <p className="mt-1 text-[12px] leading-relaxed text-black/50">{desc}</p>
             </div>
           </div>
+          </StaggerItem>
         ))}
-      </div>
+      </Stagger>
     </div>
   )
 }
