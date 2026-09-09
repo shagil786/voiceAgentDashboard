@@ -9,7 +9,7 @@
 
 @layer base {
   :root {
-    --background: oklch(0.98 0.004 80);
+    --background: oklch(0.972 0.004 82);
     --foreground: oklch(0.22 0.012 260);
     --card: #ffffff;
     --card-foreground: oklch(0.22 0.012 260);
@@ -47,21 +47,23 @@
 @layer utilities {
   .card-3d {
     background: #ffffff;
-    border: 1px solid rgba(20, 20, 22, 0.05);
+    border: 1px solid rgba(20, 20, 22, 0.06);
     border-radius: 0.9rem;
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.9),
-      0 1px 2px rgba(20, 20, 22, 0.04),
-      0 10px 28px -14px rgba(20, 20, 22, 0.16);
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
+      0 1px 2px rgba(20, 20, 22, 0.05),
+      0 2px 6px -1px rgba(20, 20, 22, 0.07),
+      0 14px 34px -12px rgba(20, 20, 22, 0.22);
     transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
   }
   .card-3d-hover:hover {
     transform: translateY(-2px);
-    border-color: rgba(20, 20, 22, 0.1);
+    border-color: rgba(20, 20, 22, 0.12);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.9),
-      0 2px 4px rgba(20, 20, 22, 0.04),
-      0 22px 44px -18px rgba(20, 20, 22, 0.28);
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
+      0 2px 4px rgba(20, 20, 22, 0.05),
+      0 6px 14px -4px rgba(20, 20, 22, 0.1),
+      0 26px 52px -18px rgba(20, 20, 22, 0.36);
   }
   /* Flat row inside a card (knowledge/tool rows): hairline only, no depth */
   .row-flat {

@@ -104,7 +104,7 @@ VOICEAGENT_AUDIT_DB=data/out/audit.sqlite \\
   8081 127.0.0.1`}</pre>
         </div>
         {facts.map(({ icon: Icon, title, desc }) => (
-          <div key={title} className="group flex gap-3 rounded-2xl border border-black/6 bg-white/60 p-4 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:border-black/12 hover:bg-white hover:shadow-[0_14px_34px_-20px_rgba(0,0,0,0.28)]">
+          <div key={title} className="card-3d card-3d-hover group flex gap-3 p-4">
             <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg bg-black/[0.04] text-black/60 transition-colors group-hover:bg-[#ff5701]/10 group-hover:text-[#ff5701]">
               <Icon className="size-3.5" />
             </span>

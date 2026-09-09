@@ -94,7 +94,7 @@ export function DashboardPage() {
         </div>
 
         <div className="mx-auto mt-10 max-w-lg">
-          <div className="rounded-2xl border border-black/8 bg-white/70 p-6 shadow-[0_1px_0_rgba(0,0,0,0.02),0_16px_40px_-24px_rgba(0,0,0,0.18)] backdrop-blur">
+          <div className="card-3d p-6">
             <Waveform />
             <div className="mt-5 text-center">
               <Button size="lg" className="h-11 gap-2 rounded-full bg-[#141416] px-7 text-white hover:bg-black hover:shadow-lg hover:shadow-black/20 hover:transition-all">
@@ -107,7 +107,7 @@ export function DashboardPage() {
         <div className="mt-14 grid gap-4 md:grid-cols-3">
           {STEPS.map(({ icon: Icon, title, desc }, i) => (
             <div key={title}
-              className="group rounded-2xl border border-black/6 bg-white/60 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-black/12 hover:bg-white hover:shadow-[0_12px_30px_-18px_rgba(0,0,0,0.25)]">
+              className="card-3d card-3d-hover group p-5">
               <div className="flex items-center gap-3">
                 <span className="flex size-9 items-center justify-center rounded-xl bg-[#141416] text-[#ff5701] transition-colors group-hover:bg-[#ff5701] group-hover:text-white">
                   <Icon className="size-4" />

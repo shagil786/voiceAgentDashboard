@@ -291,7 +291,7 @@ export function OnboardPage() {
           <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-black/35">What you're building</p>
           {OUTPUT_CARD.map(({ icon: Icon, title, desc }) => (
             <div key={title}
-              className="group rounded-2xl border border-black/6 bg-white/60 p-5 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:border-black/12 hover:bg-white hover:shadow-[0_14px_34px_-20px_rgba(0,0,0,0.28)]">
+              className="card-3d card-3d-hover group p-5">
               <div className="flex items-center gap-2.5">
                 <span className="flex size-8 items-center justify-center rounded-lg bg-black/[0.04] text-black/60 transition-colors group-hover:bg-[#ff5701]/10 group-hover:text-[#ff5701]">
                   <Icon className="size-4" />
