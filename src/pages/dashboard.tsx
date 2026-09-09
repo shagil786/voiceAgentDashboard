@@ -49,6 +49,38 @@ export function DashboardPage() {
   const [data, setData] = useState<Data | null>(null)
   const [phase, setPhase] = useState<Phase>("loading")
   const [error, setError] = useState<string | null>(null)
+  const [flashKeys, setFlashKeys] = useState<Set<string>>(new Set())
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
+
+  const callKey = (c: CallRow) => `${c.conv_id}:${c.ts}`
+
+  // bump summary from newly observed rows (no refetch needed)
+  function mergeFresh(prev: Data, latest: CallRow[]): Data {
+    const seen = new Set(prev.calls.map(callKey))
+    const fresh = latest.filter((c) => !seen.has(callKey(c)))
+    if (!fresh.length) return prev
+    const freshKeys = new Set(fresh.map(callKey))
+    setFlashKeys(freshKeys)
+    window.setTimeout(() => {
+      setFlashKeys((cur) => {
+        const next = new Set(cur)
+        freshKeys.forEach((k) => next.delete(k))
+        return next
+      })
+    }, 2600)
+    const convs = new Set(prev.calls.map((c) => c.conv_id))
+    const summary = { ...prev.summary }
+    summary.calls += fresh.length
+    for (const c of fresh) {
+      if (!convs.has(c.conv_id)) { summary.conversations += 1; convs.add(c.conv_id) }
+      const v = c.verdict || "OTHER"
+      summary.verdicts = { ...summary.verdicts, [v]: (summary.verdicts[v] || 0) + 1 }
+    }
+    // newest-first: fresh is already DESC, prepend then cap
+    const calls = [...fresh, ...prev.calls].slice(0, 30)
+    setLastUpdate(new Date())
+    return { summary, calls, ratings: prev.ratings }
+  }
 
   async function load() {
     setPhase("loading"); setError(null)
@@ -56,6 +88,7 @@ export function DashboardPage() {
     try {
       const [summary, calls, ratings] = await Promise.all([api.summary(), api.calls(100), api.ratings(50)])
       setData({ summary, calls: calls.calls, ratings: ratings.ratings })
+      setLastUpdate(new Date())
       setPhase("live")
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
@@ -63,6 +96,19 @@ export function DashboardPage() {
     }
   }
   useEffect(() => { void load() }, [])
+
+  // live decision streaming: poll every 4s while visible & live
+  useEffect(() => {
+    if (phase !== "live") return
+    const timer = window.setInterval(async () => {
+      if (document.visibilityState !== "visible") return
+      try {
+        const { calls: latest } = await api.calls(20)
+        setData((prev) => (prev ? mergeFresh(prev, latest) : prev))
+      } catch { /* transient — next tick retries */ }
+    }, 4000)
+    return () => window.clearInterval(timer)
+  }, [phase])
 
   const goToConnect = () => { window.location.href = "/connect" }
 
@@ -154,7 +200,12 @@ export function DashboardPage() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60" />
               <span className="relative inline-flex size-1.5 rounded-full bg-emerald-500" />
             </span>
-            Live from the decision log
+            Live from the decision log · auto-updates every 4s
+            {lastUpdate && (
+              <span className="font-mono text-[11px] text-black/30">
+                · {lastUpdate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+              </span>
+            )}
           </div>
         </div>
         <Button variant="outline" size="sm" onClick={() => void load()} className="rounded-full">
@@ -253,8 +304,10 @@ export function DashboardPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {calls.slice(0, 8).map((c) => (
-                    <TableRow key={c.conv_id + c.ts} className="transition-colors hover:bg-black/[0.02]">
+                  {calls.slice(0, 10).map((c) => (
+                    <TableRow key={callKey(c)} className={cn(
+                      "transition-colors hover:bg-black/[0.02]",
+                      flashKeys.has(callKey(c)) && "row-flash")}>
                       <TableCell className="pl-6 font-mono text-xs tabular-nums text-black/45">{c.ts.replace("T", " ").slice(0, 16)}</TableCell>
                       <TableCell className="font-mono text-xs">{c.conv_id}</TableCell>
                       <TableCell className="font-medium">{c.action}</TableCell>

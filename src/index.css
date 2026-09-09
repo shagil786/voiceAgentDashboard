@@ -73,6 +73,12 @@
   animation: drift var(--drift-dur, 9s) ease-in-out infinite;
 }
 
+@keyframes row-flash {
+  0% { background-color: rgba(255, 87, 1, 0.16); }
+  100% { background-color: transparent; }
+}
+.row-flash { animation: row-flash 2.4s ease-out 1; }
+
 /* Elevated '3D' card: white surface, soft inner highlight, layered depth
    shadows (no hard outline). Hover raises the card slightly. */
 @layer utilities {
