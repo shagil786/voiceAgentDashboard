@@ -108,7 +108,7 @@ export function Shell() {
       </div>
 
       {/* light canvas */}
-      <main className="min-h-screen flex-1 pl-0 md:pl-[248px]">
+      <main className="min-h-screen min-w-0 flex-1 pl-0 md:pl-[248px]">
         <div
           className="relative min-h-screen"
           style={{
