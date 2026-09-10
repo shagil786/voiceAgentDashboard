@@ -13,10 +13,17 @@ import { api, getConfig } from "@/lib/api"
 import { cn } from "@/lib/utils"
 import { MagneticButton, Stagger, StaggerItem } from "@/components/motion-primitives"
 
+interface PreviewQuestion {
+  id: string; prompt: string; why?: string; kind?: string; options?: string[]; answer_key?: string
+}
 interface Preview {
   tools: { name: string; state: string; description?: string }[]
   knowledge: { source?: string; text?: string }[]
   evals: { name: string; turns?: number }[]
+  questions?: PreviewQuestion[]
+  drafted?: boolean
+  intents?: Record<string, string[]>
+  entities?: { record_ids?: { code: string }[] } | null
   note?: string
 }
 interface DeployResult {
@@ -47,6 +54,7 @@ export function OnboardPage() {
 
   const [preview, setPreview] = useState<Preview | null>(null)
   const [deploy, setDeploy] = useState<DeployResult | null>(null)
+  const [answers, setAnswers] = useState<Record<string, string>>({})
 
   const notConnected = !getConfig()
   const hasSource = Boolean(url.trim() || text.trim())
@@ -57,7 +65,15 @@ export function OnboardPage() {
     const source: Record<string, string> = {}
     if (url.trim()) source.url = url.trim()
     if (text.trim()) source.text = text.trim()
-    return { source, interview: { offering: offering.trim(), top_asks: asks.split(",").map((s) => s.trim()).filter(Boolean) } }
+    // Gap answers overlay the step-1 fields by answer_key.
+    const interview: Record<string, string | string[]> = {
+      offering: offering.trim(),
+      top_asks: asks.split(",").map((s) => s.trim()).filter(Boolean),
+    }
+    for (const [k, v] of Object.entries(answers)) {
+      if (v.trim()) interview[k] = v.trim()
+    }
+    return { source, interview }
   }
 
   async function compile() {
@@ -212,6 +228,21 @@ export function OnboardPage() {
                 <CardDescription className="font-mono text-[11px] uppercase tracking-[0.18em] text-emerald-600">Step 2 — review</CardDescription>
                 <CardTitle className="mt-1 text-xl">What the agent will know and do.</CardTitle>
                 <CardDescription className="text-[13px] text-black/50">Compiled for your review. Nothing is live until you approve.</CardDescription>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <Badge variant="secondary" className="rounded-full bg-black/5 font-mono text-[11px] text-black/55">
+                    {preview.drafted ? "brain-drafted" : "template"}
+                  </Badge>
+                  {(preview.entities?.record_ids || []).map((r) => (
+                    <Badge key={r.code} variant="secondary" className="rounded-full bg-black/5 font-mono text-[11px] text-black/55">
+                      IDs: {r.code}
+                    </Badge>
+                  ))}
+                  {preview.intents && (
+                    <Badge variant="secondary" className="rounded-full bg-black/5 font-mono text-[11px] text-black/55">
+                      {Object.keys(preview.intents).length} intents
+                    </Badge>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="space-y-6">
                 <section>
@@ -251,6 +282,36 @@ export function OnboardPage() {
                     ))}
                   </div>
                 </section>
+                {(preview.questions || []).length > 0 && (
+                <section>
+                  <h3 className="mb-1 flex items-center gap-2 text-sm font-semibold">
+                    <PlugZap className="size-4 text-black/40" /> Questions for you
+                    <span className="font-normal text-black/40">— the agent can't guess these</span>
+                  </h3>
+                  <p className="mb-3 text-[12px] text-black/45">Answer what you can, then re-preview — the proposal sharpens with every answer.</p>
+                  <div className="space-y-2.5">
+                    {(preview.questions || []).map((q) => (
+                      <div key={q.id} className="row-flat p-3.5">
+                        <p className="text-sm font-medium">{q.prompt}</p>
+                        {q.why && <p className="mt-0.5 text-[12px] text-black/45">{q.why}</p>}
+                        {q.options && q.options.length > 0 && (
+                          <p className="mt-1 font-mono text-[11px] text-black/40">e.g. {q.options.slice(0, 4).join(", ")}</p>
+                        )}
+                        <Input
+                          value={answers[q.answer_key || q.id] || ""}
+                          onChange={(e) => setAnswers((a) => ({ ...a, [q.answer_key || q.id]: e.target.value }))}
+                          placeholder={q.kind === "multi" ? "comma-separated" : "your answer"}
+                          className="mt-2 h-10 rounded-xl border-black/10 bg-white shadow-none focus-visible:border-[#ff5701] focus-visible:ring-[#ff5701]/20"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <Button variant="outline" onClick={() => void compile()} disabled={!canPreview}
+                    className="mt-3 rounded-full border-black/10 hover:bg-black/5">
+                    {busy && <Loader2 className="size-4 mr-2 animate-spin" />} Re-preview with answers
+                  </Button>
+                </section>
+                )}
                 <div className="flex items-center justify-between border-t border-black/6 pt-4">
                   <Button variant="ghost" onClick={() => setStage(1)} className="text-black/60 hover:bg-black/5 hover:text-black">← Edit input</Button>
                   <MagneticButton strength={0.12}>
