@@ -12,7 +12,7 @@ import { useNavigate } from "react-router-dom"
 export function ConnectPage() {
   const nav = useNavigate()
   const saved = getConfig()
-  const [url, setUrl] = useState(saved?.url ?? "")
+  const [url, setUrl] = useState(saved?.url ?? "http://127.0.0.1:8081")
   const [token, setToken] = useState(saved?.token ?? "")
   const [busy, setBusy] = useState(false)
   const [ok, setOk] = useState<StatusInfo | null>(null)
