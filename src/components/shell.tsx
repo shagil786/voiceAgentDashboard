@@ -1,7 +1,8 @@
-import { NavLink, Outlet } from "react-router-dom"
+import { NavLink, Outlet, useLocation } from "react-router-dom"
 import { Soundscape } from "@/components/soundscape"
 import { LayoutDashboard, Sparkles, Settings, Radio, Zap } from "lucide-react"
-import { cn } from "cn"
+import { cn } from "@/lib/utils"
+import { getConfig } from "@/lib/api"
 
 const NAV = [
   { to: "/", label: "Overview", icon: LayoutDashboard, end: true },
@@ -12,6 +13,13 @@ const FOOT = [
 ]
 
 export function Shell() {
+  // Re-read on every navigation so connect/disconnect reflects immediately.
+  useLocation()
+  const cfg = getConfig()
+  const host = (() => {
+    try { return cfg ? new URL(cfg.url).host : null } catch { return null }
+  })()
+  const port = host?.includes(":") ? `:${host.split(":").pop()}` : host ? "linked" : "—"
   return (
     <div className="flex min-h-screen bg-[#faf9f6] text-foreground antialiased">
       {/* ── dark instrument sidebar ─────────────────────────────── */}
@@ -31,7 +39,7 @@ export function Shell() {
           <p className="flex items-center gap-1.5 text-[11px] font-medium text-white/60">
             <Radio className="size-3" /> Workspace
           </p>
-          <p className="mt-0.5 truncate text-[13px] font-medium text-white/90">Local agent · demo</p>
+          <p className="mt-0.5 truncate text-[13px] font-medium text-white/90">{host ?? "Not connected"}</p>
         </div>
 
         <nav className="flex-1 space-y-5 px-4 py-5">
@@ -83,9 +91,9 @@ export function Shell() {
         <div className="border-t border-white/8 p-4">
           <div className="flex items-center justify-between rounded-lg bg-white/4 px-3 py-2">
             <span className="flex items-center gap-2 text-xs text-white/60">
-              <span className="size-1.5 rounded-full bg-emerald-400" /> Control API
+              <span className={`size-1.5 rounded-full ${host ? "bg-emerald-400" : "bg-white/25"}`} /> Control API
             </span>
-            <span className="font-mono text-[10px] text-white/40">:8081</span>
+            <span className="font-mono text-[10px] text-white/40">{port}</span>
           </div>
           <p className="mt-3 text-center font-mono text-[10px] tracking-wider text-white/25">v0.1 · control-plane</p>
         </div>

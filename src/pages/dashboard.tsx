@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -44,11 +45,13 @@ const STEPS = [
 ]
 
 export function DashboardPage() {
+  const nav = useNavigate()
   const [data, setData] = useState<Data | null>(null)
   const [phase, setPhase] = useState<Phase>("loading")
   const [error, setError] = useState<string | null>(null)
   const [flashKeys, setFlashKeys] = useState<Set<string>>(new Set())
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
+  const [showAll, setShowAll] = useState(false)
   // quality panel is independent: judge scoring is slow, must not gate the page
   const [scores, setScores] = useState<ConvScore[] | null>(null)
   const [scoresError, setScoresError] = useState<string | null>(null)
@@ -121,7 +124,7 @@ export function DashboardPage() {
     return () => window.clearInterval(timer)
   }, [phase])
 
-  const goToConnect = () => { window.location.href = "/connect" }
+  const goToConnect = () => nav("/connect")
 
   if (phase === "loading") {
     return (
@@ -318,8 +321,9 @@ export function DashboardPage() {
       <section>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold tracking-tight">Recent decisions</h2>
-          <Button variant="ghost" size="sm" className="text-black/45 hover:text-black">
-            All decisions <ArrowUpRight className="ml-1 size-3.5" />
+          <Button variant="ghost" size="sm" onClick={() => setShowAll((v) => !v)}
+            className="text-black/45 hover:text-black">
+            {showAll ? "Show less" : "All decisions"} <ArrowUpRight className="ml-1 size-3.5" />
           </Button>
         </div>
         <Card className="card-3d overflow-hidden">
@@ -340,13 +344,13 @@ export function DashboardPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {calls.slice(0, 10).map((c) => (
+                  {(showAll ? calls : calls.slice(0, 10)).map((c) => (
                     <TableRow key={callKey(c)} className={cn("group/row transition-all hover:bg-black/[0.045]", flashKeys.has(callKey(c)) && "row-flash")}>
                       <TableCell className="pl-6 font-mono text-xs tabular-nums text-black/45 transition-colors group-hover/row:text-[#ff5701]">{c.ts.replace("T", " ").slice(0, 16)}</TableCell>
                       <TableCell className="font-mono text-xs">{c.conv_id}</TableCell>
                       <TableCell className="font-medium">{c.action}</TableCell>
                       <TableCell><Badge variant="outline" className={cn("font-mono text-[11px]", verdictClass(c.verdict))}>{c.verdict}</Badge></TableCell>
-                      <TableCell className="max-w-[220px] truncate pr-6 text-black/45">{(c.reasons || []).join("; ") || "—"}</TableCell>
+                      <TableCell className="max-w-[220px] truncate pr-6 text-black/45" title={(c.reasons || []).join("; ") || "no reason recorded"}>{(c.reasons || []).join("; ") || "—"}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

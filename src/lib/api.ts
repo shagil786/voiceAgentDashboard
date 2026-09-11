@@ -93,23 +93,3 @@ export const api = {
     request<{ checks: { name: string; passed: boolean; detail?: string }[]; live: boolean; summary: string }>(
       "/api/control/onboard/deploy", { method: "POST", body: JSON.stringify(body) }),
 }
-
-// Demo dataset — reviewable without a running agent.
-export const DEMO_SUMMARY: Summary = {
-  calls: 1284, conversations: 1102, escalation_rate: 0.14, ratings: 96, avg_rating_10: 8.6,
-  verdicts: { ALLOW: 842, ESCALATE: 180, DENY: 96, REQUIRE_AUTH: 166 },
-}
-export const DEMO_CALLS: CallRow[] = [
-  { ts: "2026-09-09T09:04:00", conv_id: "conv_8f21", action: "cancel_order", verdict: "ALLOW", reasons: ["order not shipped", "within window"] },
-  { ts: "2026-09-09T08:52:00", conv_id: "conv_8f20", action: "fraud_check", verdict: "ESCALATE", reasons: ["high risk profile"] },
-  { ts: "2026-09-09T08:31:00", conv_id: "conv_8f19", action: "fetch_order_status", verdict: "ALLOW", reasons: [] },
-  { ts: "2026-09-09T08:05:00", conv_id: "conv_8f18", action: "record_feedback", verdict: "ALLOW", reasons: ["rating 9"] },
-  { ts: "2026-09-09T07:44:00", conv_id: "conv_8f17", action: "cancel_order", verdict: "DENY", reasons: ["precondition_failed: status SHIPPED"] },
-  { ts: "2026-09-09T07:12:00", conv_id: "conv_8f16", action: "initiate_refund", verdict: "REQUIRE_AUTH", reasons: ["not authenticated"] },
-  { ts: "2026-09-09T06:58:00", conv_id: "conv_8f15", action: "order_lookup", verdict: "ALLOW", reasons: ["phone match"] },
-]
-export const DEMO_RATINGS: RatingRow[] = [
-  { tenant: "acme", session_id: "conv_8f18", ts: "2026-09-09T08:05:00", rating: 9, comment: "resolved fast, very polite" },
-  { tenant: "acme", session_id: "conv_8f05", ts: "2026-09-09T07:01:00", rating: 8, comment: "clear explanation" },
-  { tenant: "acme", session_id: "conv_8f02", ts: "2026-09-08T18:40:00", rating: 10, comment: "helped cancel and rebook" },
-]

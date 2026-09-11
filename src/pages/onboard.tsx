@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -43,6 +44,7 @@ const OUTPUT_CARD = [
 ]
 
 export function OnboardPage() {
+  const nav = useNavigate()
   const [stage, setStage] = useState<Stage>(1)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
@@ -55,6 +57,7 @@ export function OnboardPage() {
   const [preview, setPreview] = useState<Preview | null>(null)
   const [deploy, setDeploy] = useState<DeployResult | null>(null)
   const [answers, setAnswers] = useState<Record<string, string>>({})
+  const [acceptedNote, setAcceptedNote] = useState<string | null>(null)
 
   const notConnected = !getConfig()
   const hasSource = Boolean(url.trim() || text.trim())
@@ -77,10 +80,16 @@ export function OnboardPage() {
   }
 
   async function compile() {
-    setErr(null); setBusy(true)
+    setErr(null); setBusy(true); setAcceptedNote(null)
     try {
       const out = await api.onboardPreview(body())
-      setPreview(out as unknown as Preview)
+      const next = out as unknown as Preview
+      const before = preview?.questions?.length ?? 0
+      const after = next.questions?.length ?? 0
+      if (preview && after < before) {
+        setAcceptedNote(`Answers accepted — ${before - after} fewer open questions.`)
+      }
+      setPreview(next)
       setStage(2)
     } catch (e) { setErr(e instanceof Error ? e.message : String(e)) } finally { setBusy(false) }
   }
@@ -310,6 +319,9 @@ export function OnboardPage() {
                     className="mt-3 rounded-full border-black/10 hover:bg-black/5">
                     {busy && <Loader2 className="size-4 mr-2 animate-spin" />} Re-preview with answers
                   </Button>
+                  {acceptedNote && (
+                    <p className="mt-2 text-[12px] font-medium text-emerald-600">{acceptedNote}</p>
+                  )}
                 </section>
                 )}
                 <div className="flex items-center justify-between border-t border-black/6 pt-4">
@@ -348,7 +360,7 @@ export function OnboardPage() {
                 <div className="flex gap-3 pt-3">
                   <Button variant="outline" onClick={() => { setStage(1); setPreview(null); setDeploy(null) }}
                     className="rounded-full border-black/10 hover:bg-black/5">Start another</Button>
-                  {deploy.live && <Button onClick={() => (window.location.href = "/")}
+                  {deploy.live && <Button onClick={() => nav("/")}
                     className="flex-1 rounded-full bg-[#141416] text-white hover:bg-black">Go to dashboard</Button>}
                 </div>
               </CardContent>
