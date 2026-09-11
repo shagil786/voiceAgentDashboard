@@ -40,6 +40,9 @@ export function Shell() {
             <Radio className="size-3" /> Workspace
           </p>
           <p className="mt-0.5 truncate text-[13px] font-medium text-white/90">{host ?? "Not connected"}</p>
+          {cfg?.role === "viewer" && (
+            <p className="mt-1 inline-flex rounded-full bg-white/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-white/60">Viewer</p>
+          )}
         </div>
 
         <nav className="flex-1 space-y-5 px-4 py-5">

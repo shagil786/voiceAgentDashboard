@@ -43,6 +43,7 @@ export function ConnectPage() {
     saveConfig({ url: url.trim(), token: token.trim() })
     try {
       const st = await api.status()
+      saveConfig({ url: url.trim(), token: token.trim(), role: st.role ?? "admin" })
       setOk(st)
       setTimeout(() => nav("/"), 900)
     } catch (e) {
@@ -81,7 +82,7 @@ export function ConnectPage() {
         )}
         {ok && (
           <Alert className="border-emerald-500/30 bg-emerald-500/[0.05]">
-            <AlertTitle className="flex items-center gap-2 text-sm text-emerald-700"><CheckCircle2 className="size-4" /> Connected</AlertTitle>
+            <AlertTitle className="flex items-center gap-2 text-sm text-emerald-700"><CheckCircle2 className="size-4" /> Connected{ok.role === "viewer" ? " — view only" : ""}</AlertTitle>
             <AlertDescription className="text-[13px] text-black/55">
               {ok.audit_db ? `Audit store: ${ok.audit_db}` : "Agent reachable. No audit store configured yet."}
             </AlertDescription>

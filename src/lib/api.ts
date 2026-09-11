@@ -2,7 +2,7 @@
 // Talks to the agent's control server (voiceAgent repo) over HTTP with a
 // bearer token. Credentials are kept in localStorage (browser only).
 
-export interface AgentConfig { url: string; token: string }
+export interface AgentConfig { url: string; token: string; role?: "admin" | "viewer" }
 
 const KEY = "va_agent"
 
@@ -72,7 +72,7 @@ export interface RatingRow {
 }
 
 export interface StatusInfo {
-  ok: boolean; audit_db?: string | null; memory_db?: string | null; deploy_root?: string | null
+  ok: boolean; role?: "admin" | "viewer"; audit_db?: string | null; memory_db?: string | null; deploy_root?: string | null
 }
 
 export interface ConvScore {

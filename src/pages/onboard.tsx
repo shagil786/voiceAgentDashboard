@@ -107,6 +107,7 @@ export function OnboardPage() {
   }, [url, text, offering, asks, answers])
 
   const notConnected = !getConfig()
+  const isViewer = getConfig()?.role === "viewer"
   const hasSource = Boolean(url.trim() || text.trim())
   const canPreview = hasSource && !notConnected && !busy
   const canApprove = Boolean(preview) && !busy
@@ -413,6 +414,11 @@ export function OnboardPage() {
                 )}
                 <div className="flex items-center justify-between border-t border-black/6 pt-4">
                   <Button variant="ghost" onClick={() => setStage(1)} className="text-black/60 hover:bg-black/5 hover:text-black">← Edit input</Button>
+                  {isViewer ? (
+                    <p className="max-w-[60%] text-right text-[12px] leading-relaxed text-black/45">
+                      You have view access. Connect with an admin token to approve and deploy.
+                    </p>
+                  ) : (
                   <MagneticButton strength={0.12}>
                   <Button size="lg" onClick={() => void approve()} disabled={!canApprove}
                     className="h-11 rounded-full bg-[#171409] px-6 text-white shadow-[0_8px_30px_-12px_rgba(23,20,9,0.5)] transition-all hover:bg-black hover:shadow-[0_14px_40px_-12px_rgba(23,20,9,0.6)]">
@@ -420,6 +426,7 @@ export function OnboardPage() {
                     Approve &amp; deploy <Rocket className="ml-2 size-4" />
                   </Button>
                   </MagneticButton>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -464,6 +471,8 @@ export function OnboardPage() {
                         </div>
                         {h.deploy_id === liveId ? (
                           <Badge className="rounded-full bg-emerald-500/10 font-mono text-[11px] text-emerald-700">live</Badge>
+                        ) : isViewer ? (
+                          <span className="px-2 font-mono text-[11px] text-black/35">admin only</span>
                         ) : (
                           <Button variant="outline" size="sm" disabled={busy || !h.tenant_ok}
                             onClick={() => void revert(h.deploy_id)}
