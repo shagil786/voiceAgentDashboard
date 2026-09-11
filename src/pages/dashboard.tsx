@@ -58,6 +58,17 @@ export function DashboardPage() {
 
   const callKey = (c: CallRow) => `${c.conv_id}:${c.ts}`
 
+  // Decision-log reasons repeat the action ("action 'order_status' allowed by
+  // policy; ...") — strip the redundant prefix so the column shows the part
+  // that actually differs between rows.
+  function shortReason(c: CallRow) {
+    const full = (c.reasons || []).join("; ")
+    if (!full) return "—"
+    const m = full.match(/^action '([^']+)' (?:allowed|denied|escalated|challenged)[^;]*;?\s*(.*)$/)
+    if (m && m[1] === c.action) return m[2] || full
+    return full
+  }
+
   function mergeFresh(prev: Data, latest: CallRow[]): Data {
     const seen = new Set(prev.calls.map(callKey))
     const fresh = latest.filter((c) => !seen.has(callKey(c)))
@@ -350,7 +361,7 @@ export function DashboardPage() {
                       <TableCell className="font-mono text-xs">{c.conv_id}</TableCell>
                       <TableCell className="font-medium">{c.action}</TableCell>
                       <TableCell><Badge variant="outline" className={cn("font-mono text-[11px]", verdictClass(c.verdict))}>{c.verdict}</Badge></TableCell>
-                      <TableCell className="max-w-[220px] truncate pr-6 text-black/45" title={(c.reasons || []).join("; ") || "no reason recorded"}>{(c.reasons || []).join("; ") || "—"}</TableCell>
+                      <TableCell className="max-w-[220px] truncate pr-6 text-black/45" title={(c.reasons || []).join("; ") || "no reason recorded"}>{shortReason(c)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

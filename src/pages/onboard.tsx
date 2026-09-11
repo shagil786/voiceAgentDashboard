@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -34,6 +34,18 @@ interface DeployResult {
 }
 
 type Stage = 1 | 2 | 3
+
+const DRAFT_KEY = "voiceagent.onboardDraft.v1"
+
+function loadDraft(): { url: string; text: string; offering: string; asks: string; answers: Record<string, string> } {
+  try {
+    const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || "{}")
+    return {
+      url: d.url ?? "", text: d.text ?? "", offering: d.offering ?? "",
+      asks: d.asks ?? "", answers: d.answers ?? {},
+    }
+  } catch { return { url: "", text: "", offering: "", asks: "", answers: {} } }
+}
 const STEPS = ["Feed your business", "Review the proposal", "Approve & go live"]
 
 /** What the compiled agent produces — shown as a live rail beside the form. */
@@ -49,15 +61,21 @@ export function OnboardPage() {
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
-  const [url, setUrl] = useState("")
-  const [text, setText] = useState("")
-  const [offering, setOffering] = useState("")
-  const [asks, setAsks] = useState("")
+  // Draft persistence: a refresh or accidental navigation must not eat the
+  // wizard input. Cleared on "Start another" / successful deploy.
+  const [url, setUrl] = useState(() => loadDraft().url)
+  const [text, setText] = useState(() => loadDraft().text)
+  const [offering, setOffering] = useState(() => loadDraft().offering)
+  const [asks, setAsks] = useState(() => loadDraft().asks)
 
   const [preview, setPreview] = useState<Preview | null>(null)
   const [deploy, setDeploy] = useState<DeployResult | null>(null)
-  const [answers, setAnswers] = useState<Record<string, string>>({})
+  const [answers, setAnswers] = useState<Record<string, string>>(() => loadDraft().answers)
   const [acceptedNote, setAcceptedNote] = useState<string | null>(null)
+
+  useEffect(() => {
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ url, text, offering, asks, answers })) } catch { /* private mode */ }
+  }, [url, text, offering, asks, answers])
 
   const notConnected = !getConfig()
   const hasSource = Boolean(url.trim() || text.trim())
@@ -183,7 +201,7 @@ export function OnboardPage() {
                 <div className="space-y-1.5">
                   <Label htmlFor="srcText" className="text-[13px] font-medium text-black/70">Business description</Label>
                   <Textarea id="srcText"
-                    placeholder="e.g. Sunrise Dental Clinic offers root canals and cleanings, open 9am–6pm weekdays. Patients book, ask about prices, and cancel visits…"
+                    placeholder="e.g. Acme Home Services does plumbing repairs across the city, open 8am–8pm daily. Customers book visits, ask about prices, and reschedule…"
                     value={text} onChange={(e) => setText(e.target.value)} rows={5}
                     className="resize-none rounded-xl border-black/10 bg-white shadow-none transition-all focus-visible:border-[#e63e0b] focus-visible:ring-[#e63e0b]/20" />
                   <div className="flex justify-between text-[12px] text-black/40">
@@ -194,20 +212,22 @@ export function OnboardPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <Label htmlFor="offering" className="text-[13px] font-medium text-black/70">What do you offer?</Label>
-                    <Input id="offering" placeholder="dental clinic appointments" value={offering}
+                    <Input id="offering" placeholder="repairs, pricing and scheduling" value={offering}
                       onChange={(e) => setOffering(e.target.value)}
                       className="h-11 rounded-xl border-black/10 bg-white shadow-none focus-visible:border-[#e63e0b] focus-visible:ring-[#e63e0b]/20" />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="asks" className="text-[13px] font-medium text-black/70">Top customer asks</Label>
-                    <Input id="asks" placeholder="booking, price, cancel" value={asks}
+                    <Input id="asks" placeholder="hours, pricing, changes" value={asks}
                       onChange={(e) => setAsks(e.target.value)}
                       className="h-11 rounded-xl border-black/10 bg-white shadow-none focus-visible:border-[#e63e0b] focus-visible:ring-[#e63e0b]/20" />
                   </div>
                 </div>
-                <div className="flex items-center justify-between border-t border-black/6 pt-4">
+                <div className="flex items-center justify-between gap-4 border-t border-black/6 pt-4">
                   <p className="max-w-[55%] text-[12px] leading-relaxed text-black/45">
-                    The preview writes nothing — you review before anything is approved.
+                    {!canPreview
+                      ? "Add a website or a few lines of description to enable the preview."
+                      : "The preview writes nothing — you review before anything is approved."}
                   </p>
                   <MagneticButton strength={0.12}>
                   <Button size="lg" onClick={() => void compile()} disabled={!canPreview}
@@ -307,6 +327,7 @@ export function OnboardPage() {
                           <p className="mt-1 font-mono text-[11px] text-black/40">e.g. {q.options.slice(0, 4).join(", ")}</p>
                         )}
                         <Input
+                          aria-label={q.prompt}
                           value={answers[q.answer_key || q.id] || ""}
                           onChange={(e) => setAnswers((a) => ({ ...a, [q.answer_key || q.id]: e.target.value }))}
                           placeholder={q.kind === "multi" ? "comma-separated" : "your answer"}
@@ -358,7 +379,11 @@ export function OnboardPage() {
                   </div>
                 ))}
                 <div className="flex gap-3 pt-3">
-                  <Button variant="outline" onClick={() => { setStage(1); setPreview(null); setDeploy(null) }}
+                  <Button variant="outline" onClick={() => {
+                    try { localStorage.removeItem(DRAFT_KEY) } catch { /* ignore */ }
+                    setStage(1); setPreview(null); setDeploy(null)
+                    setUrl(""); setText(""); setOffering(""); setAsks(""); setAnswers({})
+                  }}
                     className="rounded-full border-black/10 hover:bg-black/5">Start another</Button>
                   {deploy.live && <Button onClick={() => nav("/")}
                     className="flex-1 rounded-full bg-[#171409] text-white hover:bg-black">Go to dashboard</Button>}
