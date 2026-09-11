@@ -12,7 +12,7 @@ import { useNavigate } from "react-router-dom"
 export function ConnectPage() {
   const nav = useNavigate()
   const saved = getConfig()
-  const [url, setUrl] = useState(saved?.url ?? "http://127.0.0.1:8081")
+  const [url, setUrl] = useState(saved?.url ?? "")
   const [token, setToken] = useState(saved?.token ?? "")
   const [busy, setBusy] = useState(false)
   const [ok, setOk] = useState<StatusInfo | null>(null)
@@ -80,13 +80,22 @@ export function ConnectPage() {
               <Label htmlFor="url" className="text-[13px] font-medium text-black/70">Agent URL</Label>
               <Input id="url" placeholder="http://127.0.0.1:8081" value={url}
                 onChange={(e) => setUrl(e.target.value)} autoComplete="off"
-                className="h-11 rounded-xl border-black/10 bg-white font-mono shadow-none focus-visible:border-[#e63e0b] focus-visible:ring-[#e63e0b]/20" />
+                className="h-11 rounded-xl border-black/10 bg-white font-mono shadow-none transition-all hover:border-black/25 focus-visible:border-[#e63e0b] focus-visible:ring-[#e63e0b]/20" />
+              {!url.trim() && (
+                <div className="flex items-center gap-2 pt-1">
+                  <span className="text-[12px] text-black/40">Agent on this machine?</span>
+                  <button type="button" onClick={() => setUrl("http://127.0.0.1:8081")}
+                    className="rounded-full border border-black/12 px-2.5 py-1 font-mono text-[11px] text-black/55 transition-colors hover:border-[#e63e0b] hover:text-[#e63e0b]">
+                    use local default :8081
+                  </button>
+                </div>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="token" className="text-[13px] font-medium text-black/70">Control token</Label>
               <Input id="token" type="password" placeholder="VOICEAGENT_CONTROL_TOKEN" value={token}
                 onChange={(e) => setToken(e.target.value)} autoComplete="off"
-                className="h-11 rounded-xl border-black/10 bg-white font-mono shadow-none focus-visible:border-[#e63e0b] focus-visible:ring-[#e63e0b]/20" />
+                className="h-11 rounded-xl border-black/10 bg-white font-mono shadow-none transition-all hover:border-black/25 focus-visible:border-[#e63e0b] focus-visible:ring-[#e63e0b]/20" />
             </div>
             <MagneticButton strength={0.12} className="w-full">
               <Button className="h-11 w-full rounded-full bg-[#171409] text-white shadow-[0_8px_30px_-12px_rgba(23,20,9,0.5)] transition-all hover:bg-black hover:shadow-[0_14px_40px_-12px_rgba(23,20,9,0.6)]" onClick={() => void connect()} disabled={busy}>

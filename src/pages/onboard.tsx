@@ -48,6 +48,29 @@ function loadDraft(): { url: string; text: string; offering: string; asks: strin
 }
 const STEPS = ["Feed your business", "Review the proposal", "Approve & go live"]
 
+// One-click starting points (landing's "Try:" pattern): fills the step-1
+// fields so the preview is one click away. Neutral, varied trades.
+const TRY_PRESETS = [
+  {
+    label: "bakery",
+    text: "Maple Street Bakery bakes sourdough and pastries, open 7am–3pm Tue–Sun. Customers ask about today's menu, pre-orders, and catering…",
+    offering: "fresh bread, pre-orders and catering",
+    asks: "menu, pre-order, catering",
+  },
+  {
+    label: "plumber",
+    text: "RapidFlow Plumbing does home repairs across the city, open 8am–8pm daily. Customers book visits, ask about prices, and reschedule…",
+    offering: "home repairs and scheduling",
+    asks: "pricing, timing, changes",
+  },
+  {
+    label: "clinic",
+    text: "Lakeside Physio treats sports injuries, open 9am–6pm weekdays. Patients book sessions, ask about plans, and move appointments…",
+    offering: "sessions, plans and rebooking",
+    asks: "plans, timing, rebook",
+  },
+]
+
 /** What the compiled agent produces — shown as a live rail beside the form. */
 const OUTPUT_CARD = [
   { icon: BookOpenText, title: "Knowledge", desc: "Your site and description, distilled into cited facts it answers from." },
@@ -192,7 +215,7 @@ export function OnboardPage() {
                   <Label htmlFor="srcUrl" className="text-[13px] font-medium text-black/70">Website URL</Label>
                   <Input id="srcUrl" placeholder="https://yourbusiness.com" value={url}
                     onChange={(e) => setUrl(e.target.value)}
-                    className="h-11 rounded-xl border-black/10 bg-white shadow-none transition-all focus-visible:border-[#e63e0b] focus-visible:ring-[#e63e0b]/20" />
+                    className="h-11 rounded-xl border-black/10 bg-white shadow-none transition-all hover:border-black/25 focus-visible:border-[#e63e0b] focus-visible:ring-[#e63e0b]/20" />
                 </div>
                 <div className="relative text-center">
                   <div className="absolute inset-0 flex items-center"><Separator className="bg-black/6" /></div>
@@ -203,7 +226,7 @@ export function OnboardPage() {
                   <Textarea id="srcText"
                     placeholder="e.g. Acme Home Services does plumbing repairs across the city, open 8am–8pm daily. Customers book visits, ask about prices, and reschedule…"
                     value={text} onChange={(e) => setText(e.target.value)} rows={5}
-                    className="resize-none rounded-xl border-black/10 bg-white shadow-none transition-all focus-visible:border-[#e63e0b] focus-visible:ring-[#e63e0b]/20" />
+                    className="resize-none rounded-xl border-black/10 bg-white shadow-none transition-all hover:border-black/25 focus-visible:border-[#e63e0b] focus-visible:ring-[#e63e0b]/20" />
                   <div className="flex justify-between text-[12px] text-black/40">
                     <span>Plain language works best — prices, hours, policies.</span>
                     <span className="font-mono tabular-nums">{text.trim().length}</span>
@@ -214,14 +237,24 @@ export function OnboardPage() {
                     <Label htmlFor="offering" className="text-[13px] font-medium text-black/70">What do you offer?</Label>
                     <Input id="offering" placeholder="repairs, pricing and scheduling" value={offering}
                       onChange={(e) => setOffering(e.target.value)}
-                      className="h-11 rounded-xl border-black/10 bg-white shadow-none focus-visible:border-[#e63e0b] focus-visible:ring-[#e63e0b]/20" />
+                      className="h-11 rounded-xl border-black/10 bg-white shadow-none transition-all hover:border-black/25 focus-visible:border-[#e63e0b] focus-visible:ring-[#e63e0b]/20" />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="asks" className="text-[13px] font-medium text-black/70">Top customer asks</Label>
                     <Input id="asks" placeholder="hours, pricing, changes" value={asks}
                       onChange={(e) => setAsks(e.target.value)}
-                      className="h-11 rounded-xl border-black/10 bg-white shadow-none focus-visible:border-[#e63e0b] focus-visible:ring-[#e63e0b]/20" />
+                      className="h-11 rounded-xl border-black/10 bg-white shadow-none transition-all hover:border-black/25 focus-visible:border-[#e63e0b] focus-visible:ring-[#e63e0b]/20" />
                   </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-black/40">Try:</span>
+                  {TRY_PRESETS.map((p) => (
+                    <button key={p.label} type="button"
+                      onClick={() => { setText(p.text); setOffering(p.offering); setAsks(p.asks) }}
+                      className="rounded-full border border-black/12 px-3 py-1.5 font-mono text-[11px] text-black/55 transition-colors hover:border-[#e63e0b] hover:text-[#e63e0b]">
+                      {p.label}
+                    </button>
+                  ))}
                 </div>
                 <div className="flex items-center justify-between gap-4 border-t border-black/6 pt-4">
                   <p className="max-w-[55%] text-[12px] leading-relaxed text-black/45">
@@ -331,7 +364,7 @@ export function OnboardPage() {
                           value={answers[q.answer_key || q.id] || ""}
                           onChange={(e) => setAnswers((a) => ({ ...a, [q.answer_key || q.id]: e.target.value }))}
                           placeholder={q.kind === "multi" ? "comma-separated" : "your answer"}
-                          className="mt-2 h-10 rounded-xl border-black/10 bg-white shadow-none focus-visible:border-[#e63e0b] focus-visible:ring-[#e63e0b]/20"
+                          className="mt-2 h-10 rounded-xl border-black/10 bg-white shadow-none transition-all hover:border-black/25 focus-visible:border-[#e63e0b] focus-visible:ring-[#e63e0b]/20"
                         />
                       </div>
                     ))}
