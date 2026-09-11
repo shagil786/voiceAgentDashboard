@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -24,54 +24,18 @@ function verdictClass(v: string) {
   return ""
 }
 
-/** Interactive voice-print for the empty state: idle drift + amplitude that
- * leans toward the pointer. Static when reduced-motion is preferred. */
+/** Decorative voice-waveform bars for the empty state. */
 function Waveform() {
-  const ref = useRef<HTMLCanvasElement>(null)
-
-  useEffect(() => {
-    const canvas = ref.current
-    if (!canvas) return
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
-    const dpr = Math.min(window.devicePixelRatio || 1, 2)
-    const W = 560, H = 64
-    canvas.width = W * dpr; canvas.height = H * dpr
-    ctx.scale(dpr, dpr)
-    const N = 72
-    let mx = -9999
-    let raf = 0
-    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    const onMove = (e: PointerEvent) => {
-      const r = canvas.getBoundingClientRect()
-      mx = ((e.clientX - r.left) / r.width) * W
-    }
-    const onLeave = () => { mx = -9999 }
-    canvas.addEventListener("pointermove", onMove)
-    canvas.addEventListener("pointerleave", onLeave)
-
-    const draw = (t: number) => {
-      ctx.clearRect(0, 0, W, H)
-      const bw = W / N
-      for (let i = 0; i < N; i++) {
-        const x = i * bw + bw / 2
-        const idle = 0.28 + 0.22 * Math.sin(t / 900 + i * 0.55) + 0.12 * Math.sin(t / 530 + i * 1.3)
-        const prox = Math.max(0, 1 - Math.abs(x - mx) / 130)
-        const a = still ? 0.4 : Math.min(1, Math.max(0.08, idle + prox * prox * 0.9))
-        const h = Math.max(3, a * (H - 8))
-        ctx.fillStyle = `rgba(230,62,11,${0.45 + a * 0.55})`
-        const w = Math.max(2.5, bw * (a > 0.72 ? 0.66 : 0.5))
-        ctx.beginPath()
-        ctx.roundRect(x - w / 2, (H - h) / 2, w, h, w / 2)
-        ctx.fill()
-      }
-      if (!still) raf = requestAnimationFrame(draw)
-    }
-    raf = requestAnimationFrame(draw)
-    return () => { cancelAnimationFrame(raf); canvas.removeEventListener("pointermove", onMove); canvas.removeEventListener("pointerleave", onLeave) }
-  }, [])
-
-  return <canvas ref={ref} style={{ width: "100%", maxWidth: 560, height: 64 }} className="mx-auto" aria-hidden />
+  const heights = [10, 22, 34, 26, 42, 18, 30, 48, 24, 38, 16, 28, 44, 20, 12]
+  return (
+    <div className="flex h-16 items-end justify-center gap-1.5" aria-hidden>
+      {heights.map((h, i) => (
+        <span key={i} className="w-1.5 rounded-full bg-[#e63e0b] transition-all duration-500"
+          style={{ height: `${h}px`, animation: `wave 1.6s ease-in-out ${i * 0.09}s infinite`, opacity: 0.55 + (i % 3) * 0.15 }} />
+      ))}
+      <style>{`@keyframes wave { 0%,100% { transform: scaleY(0.55); } 50% { transform: scaleY(1); } }`}</style>
+    </div>
+  )
 }
 
 const STEPS = [
