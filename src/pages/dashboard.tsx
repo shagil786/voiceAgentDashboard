@@ -24,15 +24,29 @@ function verdictClass(v: string) {
   return ""
 }
 
-/** Decorative voice-waveform bars for the empty state. */
+/** Decorative voice-waveform bars for the empty state — the original staggered
+ * pulse, plus bars near the pointer grow taller and brighter. */
 function Waveform() {
   const heights = [10, 22, 34, 26, 42, 18, 30, 48, 24, 38, 16, 28, 44, 20, 12]
+  const [hot, setHot] = useState<number | null>(null)
   return (
-    <div className="flex h-16 items-end justify-center gap-1.5" aria-hidden>
-      {heights.map((h, i) => (
-        <span key={i} className="w-1.5 rounded-full bg-[#e63e0b] transition-all duration-500"
-          style={{ height: `${h}px`, animation: `wave 1.6s ease-in-out ${i * 0.09}s infinite`, opacity: 0.55 + (i % 3) * 0.15 }} />
-      ))}
+    <div className="flex h-16 items-end justify-center gap-1.5" aria-hidden
+      onPointerMove={(e) => {
+        const r = e.currentTarget.getBoundingClientRect()
+        setHot(Math.floor(((e.clientX - r.left) / r.width) * heights.length))
+      }}
+      onPointerLeave={() => setHot(null)}>
+      {heights.map((h, i) => {
+        const d = hot == null ? 99 : Math.abs(i - hot)
+        return (
+          <span key={i} className="w-1.5 rounded-full bg-[#e63e0b] transition-all duration-500"
+            style={{
+              height: `${h + Math.max(0, 14 - d * 6)}px`,
+              animation: `wave 1.6s ease-in-out ${i * 0.09}s infinite`,
+              opacity: Math.min(1, 0.55 + (i % 3) * 0.15 + Math.max(0, 0.45 - d * 0.18)),
+            }} />
+        )
+      })}
       <style>{`@keyframes wave { 0%,100% { transform: scaleY(0.55); } 50% { transform: scaleY(1); } }`}</style>
     </div>
   )
