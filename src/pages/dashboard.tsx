@@ -59,9 +59,8 @@ function Waveform() {
         const prox = Math.max(0, 1 - Math.abs(x - mx) / 130)
         const a = still ? 0.4 : Math.min(1, Math.max(0.08, idle + prox * prox * 0.9))
         const h = Math.max(3, a * (H - 8))
-        const hot = a > 0.72
-        ctx.fillStyle = hot ? "#e63e0b" : "rgba(23,20,9,0.72)"
-        const w = Math.max(2, bw * 0.42)
+        ctx.fillStyle = `rgba(230,62,11,${0.45 + a * 0.55})`
+        const w = Math.max(2.5, bw * (a > 0.72 ? 0.66 : 0.5))
         ctx.beginPath()
         ctx.roundRect(x - w / 2, (H - h) / 2, w, h, w / 2)
         ctx.fill()

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Loader2, PlugZap, CheckCircle2, XCircle, TerminalSquare, LockKeyhole, Radio } from "lucide-react"
+import { Loader2, PlugZap, CheckCircle2, XCircle, TerminalSquare, LockKeyhole, Radio, Copy, Check } from "lucide-react"
 import { api, getConfig, saveConfig, type StatusInfo } from "@/lib/api"
 import { MagneticButton, Stagger, StaggerItem } from "@/components/motion-primitives"
 import { useNavigate } from "react-router-dom"
@@ -17,6 +17,24 @@ export function ConnectPage() {
   const [busy, setBusy] = useState(false)
   const [ok, setOk] = useState<StatusInfo | null>(null)
   const [err, setErr] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  const COMMAND = "VOICEAGENT_CONTROL_TOKEN=pick-a-secret .venv/bin/python scripts/control_server.py"
+
+  async function copyCommand() {
+    try {
+      await navigator.clipboard.writeText(COMMAND)
+    } catch {
+      const ta = document.createElement("textarea")
+      ta.value = COMMAND
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand("copy")
+      ta.remove()
+    }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1600)
+  }
 
   async function connect() {
     setErr(null); setOk(null)
@@ -112,11 +130,16 @@ export function ConnectPage() {
         <StaggerItem>
         <div className="rounded-2xl bg-[#171409] p-5 text-white shadow-[0_20px_50px_-28px_rgba(0,0,0,0.5)]">
           <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">Run on the agent machine</p>
-          <p className="mt-2 text-[13px] leading-relaxed text-white/65">In the <code className="rounded bg-white/10 px-1 font-mono text-[12px] text-white">voiceAgent</code> repo:</p>
-          <pre className="mt-3 overflow-x-auto rounded-xl bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-emerald-300/90">{`VOICEAGENT_CONTROL_TOKEN=secret \\
-VOICEAGENT_AUDIT_DB=data/out/audit.sqlite \\
-.venv/bin/python scripts/control_server.py \\\\
-  8081 127.0.0.1`}</pre>
+          <p className="mt-2 text-[13px] leading-relaxed text-white/65">In the <code className="rounded bg-white/10 px-1 font-mono text-[12px] text-white">voiceAgent</code> repo, one line:</p>
+          <div className="mt-3 flex items-center gap-2 rounded-xl bg-black/40 p-2.5 pl-3">
+            <code className="min-w-0 flex-1 truncate font-mono text-[11px] leading-relaxed text-emerald-300/90" title={COMMAND}>{COMMAND}</code>
+            <button type="button" onClick={() => void copyCommand()}
+              className="flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 font-mono text-[11px] text-white/80 transition-colors hover:bg-[#e63e0b] hover:text-white">
+              {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
+              {copied ? "Copied" : "Copy"}
+            </button>
+          </div>
+          <p className="mt-2.5 text-[12px] leading-relaxed text-white/45">Use the same secret as the control token here. Port 8081 and local-only bind are the defaults — nothing else to configure.</p>
         </div>
         </StaggerItem>
         {facts.map(({ icon: Icon, title, desc }) => (
