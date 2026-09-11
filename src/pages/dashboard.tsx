@@ -176,7 +176,7 @@ export function DashboardPage() {
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-black/55">
             Connect the console and every governed decision, caller rating and
-            escalation appears here — live, audited, nothing fake.
+            escalation appears here.
           </p>
         </div>
 

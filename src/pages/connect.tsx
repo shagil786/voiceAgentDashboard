@@ -83,7 +83,7 @@ export function ConnectPage() {
           <Alert className="border-emerald-500/30 bg-emerald-500/[0.05]">
             <AlertTitle className="flex items-center gap-2 text-sm text-emerald-700"><CheckCircle2 className="size-4" /> Connected</AlertTitle>
             <AlertDescription className="text-[13px] text-black/55">
-              {ok.audit_db ? `Audit store: ${ok.audit_db}` : "Agent reachable — no audit store configured yet."}
+              {ok.audit_db ? `Audit store: ${ok.audit_db}` : "Agent reachable. No audit store configured yet."}
             </AlertDescription>
           </Alert>
         )}
@@ -139,7 +139,7 @@ export function ConnectPage() {
               {copied ? "Copied" : "Copy"}
             </button>
           </div>
-          <p className="mt-2.5 text-[12px] leading-relaxed text-white/45">Use the same secret as the control token here. Port 8081 and local-only bind are the defaults — nothing else to configure.</p>
+          <p className="mt-2.5 text-[12px] leading-relaxed text-white/45">Use the same secret as the control token here. Port 8081 and local-only bind are the defaults.</p>
         </div>
         </StaggerItem>
         {facts.map(({ icon: Icon, title, desc }) => (

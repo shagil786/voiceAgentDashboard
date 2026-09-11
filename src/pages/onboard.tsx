@@ -260,7 +260,7 @@ export function OnboardPage() {
                   <p className="max-w-[55%] text-[12px] leading-relaxed text-black/45">
                     {!canPreview
                       ? "Add a website or a few lines of description to enable the preview."
-                      : "The preview writes nothing — you review before anything is approved."}
+                      : "The preview writes nothing. You review before anything is approved."}
                   </p>
                   <MagneticButton strength={0.12}>
                   <Button size="lg" onClick={() => void compile()} disabled={!canPreview}
