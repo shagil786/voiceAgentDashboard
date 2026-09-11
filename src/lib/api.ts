@@ -92,4 +92,10 @@ export const api = {
   onboardDeploy: (body: unknown) =>
     request<{ checks: { name: string; passed: boolean; detail?: string }[]; live: boolean; summary: string }>(
       "/api/control/onboard/deploy", { method: "POST", body: JSON.stringify(body) }),
+  deploys: () =>
+    request<{ deploys: { deploy_id: string; version: string | null; tenant_ok: boolean; mtime: number }[]; live: string | null }>(
+      "/api/control/deploys"),
+  rollbackDeploy: (deploy_id: string) =>
+    request<{ ok: boolean; deploy_id: string; checks: { name: string; passed: boolean }[]; tenant_errors: string[]; tenant_dir: string; summary: string }>(
+      "/api/control/deploy/rollback", { method: "POST", body: JSON.stringify({ deploy_id }) }),
 }

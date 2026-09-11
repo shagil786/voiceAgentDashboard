@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Loader2, Rocket, Sparkles, FileText, PlugZap, ShieldCheck, BookOpenText, Wrench, ScrollText } from "lucide-react"
+import { Loader2, Rocket, Sparkles, FileText, PlugZap, ShieldCheck, BookOpenText, Wrench, ScrollText, History } from "lucide-react"
 import { api, getConfig } from "@/lib/api"
 import { cn } from "@/lib/utils"
 import { MagneticButton, Stagger, StaggerItem } from "@/components/motion-primitives"
@@ -31,6 +31,12 @@ interface DeployResult {
   checks: { name: string; passed: boolean; detail?: string }[]
   live: boolean
   summary: string
+}
+interface DeployEntry {
+  deploy_id: string
+  version: string | null
+  tenant_ok: boolean
+  mtime: number
 }
 
 type Stage = 1 | 2 | 3
@@ -141,6 +147,33 @@ export function OnboardPage() {
       const out = await api.onboardDeploy({ ...body(), deploy_id: `owner-${Date.now()}` })
       setDeploy(out)
       setStage(3)
+      void refreshHistory()
+    } catch (e) { setErr(e instanceof Error ? e.message : String(e)) } finally { setBusy(false) }
+  }
+
+  const [history, setHistory] = useState<DeployEntry[] | null>(null)
+  const [liveId, setLiveId] = useState<string | null>(null)
+  const [histNote, setHistNote] = useState<string | null>(null)
+
+  async function refreshHistory() {
+    if (getConfig() == null) return
+    try {
+      const h = await api.deploys()
+      setHistory(h.deploys)
+      setLiveId(h.live)
+    } catch { setHistory(null) }
+  }
+
+  async function revert(id: string) {
+    setErr(null); setHistNote(null); setBusy(true)
+    try {
+      const out = await api.rollbackDeploy(id)
+      if (out.ok) {
+        setHistNote(`Rolled back — ${id} is live again (${out.summary}).`)
+      } else {
+        setHistNote(`Revert refused — ${id}: ${(out.tenant_errors || []).join("; ") || out.summary}`)
+      }
+      await refreshHistory()
     } catch (e) { setErr(e instanceof Error ? e.message : String(e)) } finally { setBusy(false) }
   }
 
@@ -410,7 +443,39 @@ export function OnboardPage() {
                       {c.passed ? "passed" : "failed"}
                     </Badge>
                   </div>
-                ))}
+                )) }
+                {history !== null && history.length > 0 && (
+                <section className="pt-1">
+                  <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+                    <History className="size-4 text-black/40" /> Deploy history
+                    <span className="font-normal text-black/40">— revert re-verifies, then repoints live</span>
+                  </h3>
+                  {histNote && (
+                    <p className="mb-2 text-[12px] font-medium text-emerald-600">{histNote}</p>
+                  )}
+                  <div className="space-y-2">
+                    {history.map((h) => (
+                      <div key={h.deploy_id} className="row-flat flex items-center justify-between gap-3 px-4 py-2.5">
+                        <div className="min-w-0">
+                          <p className="truncate font-mono text-[12px] font-medium">{h.deploy_id}</p>
+                          <p className="text-[11px] text-black/45">
+                            {h.version ? `v ${h.version}` : "not promoted"} · {h.tenant_ok ? "tenant staged" : "no tenant"}
+                          </p>
+                        </div>
+                        {h.deploy_id === liveId ? (
+                          <Badge className="rounded-full bg-emerald-500/10 font-mono text-[11px] text-emerald-700">live</Badge>
+                        ) : (
+                          <Button variant="outline" size="sm" disabled={busy || !h.tenant_ok}
+                            onClick={() => void revert(h.deploy_id)}
+                            className="rounded-full border-black/10 hover:bg-black/5">
+                            Revert
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+                )}
                 <div className="flex gap-3 pt-3">
                   <Button variant="outline" onClick={() => {
                     try { localStorage.removeItem(DRAFT_KEY) } catch { /* ignore */ }
