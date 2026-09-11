@@ -108,8 +108,8 @@ export function OnboardPage() {
       <Stagger className="space-y-8" delay={0.03}>
       <StaggerItem>
       <header className="max-w-2xl">
-        <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#ff5701]">New agent</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight">Describe your business.</h1>
+        <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#e63e0b]">New agent</p>
+        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight">Describe your <em className="font-serif font-normal italic text-[#e63e0b]">business</em>.</h1>
         <p className="mt-2 text-[15px] leading-relaxed text-black/55">
           The agent compiles what it will know and do from what you tell it.
           You review the proposal — nothing goes live until you approve it.
@@ -124,7 +124,7 @@ export function OnboardPage() {
               <div className="flex items-center gap-2">
                 <span className={cn(
                   "flex size-6 shrink-0 items-center justify-center rounded-full border font-mono text-[11px] transition-colors",
-                  stage === n && "border-[#ff5701] bg-[#ff5701] text-white",
+                  stage === n && "border-[#e63e0b] bg-[#e63e0b] text-white",
                   stage > n && "border-emerald-500/40 bg-emerald-500/10 text-emerald-600",
                   stage < n && "border-black/10 bg-white text-black/40")}>
                   {stage > n ? "✓" : n}
@@ -154,12 +154,12 @@ export function OnboardPage() {
         {/* left: the wizard */}
         <div className="space-y-6">
           {notConnected && (
-            <Alert className="border-[#ff5701]/25 bg-[#ff5701]/[0.04]">
-              <PlugZap className="size-4 text-[#ff5701]" />
+            <Alert className="border-[#e63e0b]/25 bg-[#e63e0b]/[0.04]">
+              <PlugZap className="size-4 text-[#e63e0b]" />
               <AlertTitle className="text-[14px]">Connect the console first</AlertTitle>
               <AlertDescription className="text-[13px] text-black/55">
                 The wizard compiles against your agent's control API.{" "}
-                <a className="font-semibold text-[#ff5701] underline underline-offset-2 hover:text-black" href="/connect">Connection page →</a>
+                <a className="font-semibold text-[#e63e0b] underline underline-offset-2 hover:text-black" href="/connect">Connection page →</a>
               </AlertDescription>
             </Alert>
           )}
@@ -167,14 +167,14 @@ export function OnboardPage() {
           {stage === 1 && (
             <Card className="card-3d">
               <CardHeader className="pb-3">
-                <CardDescription className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#ff5701]">Step 1 — input</CardDescription>
+                <CardDescription className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#e63e0b]">Step 1 — input</CardDescription>
               </CardHeader>
               <CardContent className="space-y-5">
                 <div className="space-y-1.5">
                   <Label htmlFor="srcUrl" className="text-[13px] font-medium text-black/70">Website URL</Label>
                   <Input id="srcUrl" placeholder="https://yourbusiness.com" value={url}
                     onChange={(e) => setUrl(e.target.value)}
-                    className="h-11 rounded-xl border-black/10 bg-white shadow-none transition-all focus-visible:border-[#ff5701] focus-visible:ring-[#ff5701]/20" />
+                    className="h-11 rounded-xl border-black/10 bg-white shadow-none transition-all focus-visible:border-[#e63e0b] focus-visible:ring-[#e63e0b]/20" />
                 </div>
                 <div className="relative text-center">
                   <div className="absolute inset-0 flex items-center"><Separator className="bg-black/6" /></div>
@@ -185,7 +185,7 @@ export function OnboardPage() {
                   <Textarea id="srcText"
                     placeholder="e.g. Sunrise Dental Clinic offers root canals and cleanings, open 9am–6pm weekdays. Patients book, ask about prices, and cancel visits…"
                     value={text} onChange={(e) => setText(e.target.value)} rows={5}
-                    className="resize-none rounded-xl border-black/10 bg-white shadow-none transition-all focus-visible:border-[#ff5701] focus-visible:ring-[#ff5701]/20" />
+                    className="resize-none rounded-xl border-black/10 bg-white shadow-none transition-all focus-visible:border-[#e63e0b] focus-visible:ring-[#e63e0b]/20" />
                   <div className="flex justify-between text-[12px] text-black/40">
                     <span>Plain language works best — prices, hours, policies.</span>
                     <span className="font-mono tabular-nums">{text.trim().length}</span>
@@ -196,13 +196,13 @@ export function OnboardPage() {
                     <Label htmlFor="offering" className="text-[13px] font-medium text-black/70">What do you offer?</Label>
                     <Input id="offering" placeholder="dental clinic appointments" value={offering}
                       onChange={(e) => setOffering(e.target.value)}
-                      className="h-11 rounded-xl border-black/10 bg-white shadow-none focus-visible:border-[#ff5701] focus-visible:ring-[#ff5701]/20" />
+                      className="h-11 rounded-xl border-black/10 bg-white shadow-none focus-visible:border-[#e63e0b] focus-visible:ring-[#e63e0b]/20" />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="asks" className="text-[13px] font-medium text-black/70">Top customer asks</Label>
                     <Input id="asks" placeholder="booking, price, cancel" value={asks}
                       onChange={(e) => setAsks(e.target.value)}
-                      className="h-11 rounded-xl border-black/10 bg-white shadow-none focus-visible:border-[#ff5701] focus-visible:ring-[#ff5701]/20" />
+                      className="h-11 rounded-xl border-black/10 bg-white shadow-none focus-visible:border-[#e63e0b] focus-visible:ring-[#e63e0b]/20" />
                   </div>
                 </div>
                 <div className="flex items-center justify-between border-t border-black/6 pt-4">
@@ -211,7 +211,7 @@ export function OnboardPage() {
                   </p>
                   <MagneticButton strength={0.12}>
                   <Button size="lg" onClick={() => void compile()} disabled={!canPreview}
-                    className="h-11 rounded-full bg-[#141416] px-6 text-white shadow-[0_8px_30px_-12px_rgba(20,20,22,0.5)] transition-all hover:bg-black hover:shadow-[0_14px_40px_-12px_rgba(20,20,22,0.6)] disabled:opacity-40">
+                    className="h-11 rounded-full bg-[#171409] px-6 text-white shadow-[0_8px_30px_-12px_rgba(23,20,9,0.5)] transition-all hover:bg-black hover:shadow-[0_14px_40px_-12px_rgba(23,20,9,0.6)] disabled:opacity-40">
                     {busy && <Loader2 className="size-4 mr-2 animate-spin" />}
                     Preview <span className="ml-1">→</span>
                   </Button>
@@ -310,7 +310,7 @@ export function OnboardPage() {
                           value={answers[q.answer_key || q.id] || ""}
                           onChange={(e) => setAnswers((a) => ({ ...a, [q.answer_key || q.id]: e.target.value }))}
                           placeholder={q.kind === "multi" ? "comma-separated" : "your answer"}
-                          className="mt-2 h-10 rounded-xl border-black/10 bg-white shadow-none focus-visible:border-[#ff5701] focus-visible:ring-[#ff5701]/20"
+                          className="mt-2 h-10 rounded-xl border-black/10 bg-white shadow-none focus-visible:border-[#e63e0b] focus-visible:ring-[#e63e0b]/20"
                         />
                       </div>
                     ))}
@@ -328,7 +328,7 @@ export function OnboardPage() {
                   <Button variant="ghost" onClick={() => setStage(1)} className="text-black/60 hover:bg-black/5 hover:text-black">← Edit input</Button>
                   <MagneticButton strength={0.12}>
                   <Button size="lg" onClick={() => void approve()} disabled={!canApprove}
-                    className="h-11 rounded-full bg-[#141416] px-6 text-white shadow-[0_8px_30px_-12px_rgba(20,20,22,0.5)] transition-all hover:bg-black hover:shadow-[0_14px_40px_-12px_rgba(20,20,22,0.6)]">
+                    className="h-11 rounded-full bg-[#171409] px-6 text-white shadow-[0_8px_30px_-12px_rgba(23,20,9,0.5)] transition-all hover:bg-black hover:shadow-[0_14px_40px_-12px_rgba(23,20,9,0.6)]">
                     {busy && <Loader2 className="size-4 mr-2 animate-spin" />}
                     Approve &amp; deploy <Rocket className="ml-2 size-4" />
                   </Button>
@@ -361,7 +361,7 @@ export function OnboardPage() {
                   <Button variant="outline" onClick={() => { setStage(1); setPreview(null); setDeploy(null) }}
                     className="rounded-full border-black/10 hover:bg-black/5">Start another</Button>
                   {deploy.live && <Button onClick={() => nav("/")}
-                    className="flex-1 rounded-full bg-[#141416] text-white hover:bg-black">Go to dashboard</Button>}
+                    className="flex-1 rounded-full bg-[#171409] text-white hover:bg-black">Go to dashboard</Button>}
                 </div>
               </CardContent>
             </Card>
@@ -375,7 +375,7 @@ export function OnboardPage() {
             <div key={title}
               className="card-3d card-3d-hover group p-5">
               <div className="flex items-center gap-2.5">
-                <span className="flex size-8 items-center justify-center rounded-lg bg-black/[0.04] text-black/60 transition-colors group-hover:bg-[#ff5701]/10 group-hover:text-[#ff5701]">
+                <span className="flex size-8 items-center justify-center rounded-lg bg-black/[0.04] text-black/60 transition-colors group-hover:bg-[#e63e0b]/10 group-hover:text-[#e63e0b]">
                   <Icon className="size-4" />
                 </span>
                 <h3 className="text-sm font-semibold tracking-tight">{title}</h3>

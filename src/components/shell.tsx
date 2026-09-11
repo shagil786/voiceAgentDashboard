@@ -21,14 +21,14 @@ export function Shell() {
   })()
   const port = host?.includes(":") ? `:${host.split(":").pop()}` : host ? "linked" : "—"
   return (
-    <div className="flex min-h-screen bg-[#faf9f6] text-foreground antialiased">
+    <div className="flex min-h-screen bg-[#f1ede1] text-foreground antialiased">
       {/* ── dark instrument sidebar ─────────────────────────────── */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col bg-[#141416] text-white md:flex">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col bg-[#171409] text-white md:flex">
         {/* brand */}
         <div className="flex h-16 items-center gap-2.5 border-b border-white/8 px-5">
           <span className="relative flex size-2.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#ff5701] opacity-60" />
-            <span className="relative inline-flex size-2.5 rounded-full bg-[#ff5701]" />
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#e63e0b] opacity-60" />
+            <span className="relative inline-flex size-2.5 rounded-full bg-[#e63e0b]" />
           </span>
           <span className="text-[15px] font-semibold tracking-tight">VoiceAgent</span>
           <span className="ml-auto rounded-md border border-white/10 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-white/50">console</span>
@@ -51,13 +51,13 @@ export function Shell() {
                   className={({ isActive }) => cn(
                     "group relative flex items-center gap-2.5 overflow-hidden rounded-lg px-2.5 py-2 text-[13px] font-medium transition-all duration-200",
                     "text-white/60 hover:translate-x-0.5 hover:bg-white/6 hover:text-white",
-                    isActive && "bg-white/8 text-white shadow-[inset_2px_0_0_0_#ff5701]")}>
+                    isActive && "bg-white/8 text-white shadow-[inset_2px_0_0_0_#e63e0b]")}>
                   {({ isActive }) => (
                     <>
                       <Icon className={cn("size-4 transition-colors",
-                        isActive ? "text-[#ff5701]" : "text-white/45 group-hover:text-white/80")} />
+                        isActive ? "text-[#e63e0b]" : "text-white/45 group-hover:text-white/80")} />
                       {label}
-                      {isActive && <Zap className="ml-auto size-3 text-[#ff5701]/80" />}
+                      {isActive && <Zap className="ml-auto size-3 text-[#e63e0b]/80" />}
                     </>
                   )}
                 </NavLink>
@@ -73,11 +73,11 @@ export function Shell() {
                   className={({ isActive }) => cn(
                     "group relative flex items-center gap-2.5 overflow-hidden rounded-lg px-2.5 py-2 text-[13px] font-medium transition-all duration-200",
                     "text-white/60 hover:translate-x-0.5 hover:bg-white/6 hover:text-white",
-                    isActive && "bg-white/8 text-white shadow-[inset_2px_0_0_0_#ff5701]")}>
+                    isActive && "bg-white/8 text-white shadow-[inset_2px_0_0_0_#e63e0b]")}>
                   {({ isActive }) => (
                     <>
                       <Icon className={cn("size-4 transition-colors",
-                        isActive ? "text-[#ff5701]" : "text-white/45 group-hover:text-white/80")} />
+                        isActive ? "text-[#e63e0b]" : "text-white/45 group-hover:text-white/80")} />
                       {label}
                     </>
                   )}
@@ -100,9 +100,9 @@ export function Shell() {
       </aside>
 
       {/* mobile top bar */}
-      <div className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-[#141416] px-4 text-white md:hidden">
+      <div className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-[#171409] px-4 text-white md:hidden">
         <span className="flex items-center gap-2 text-[15px] font-semibold">
-          <span className="size-2 rounded-full bg-[#ff5701]" /> VoiceAgent
+          <span className="size-2 rounded-full bg-[#e63e0b]" /> VoiceAgent
         </span>
         <nav className="flex gap-1">
           {[...NAV, ...FOOT].map(({ to, label }) => (
@@ -121,12 +121,12 @@ export function Shell() {
           className="relative min-h-screen"
           style={{
             background:
-              "radial-gradient(1100px 480px at 85% -8%, rgba(255,87,1,0.055), transparent 60%), radial-gradient(900px 420px at -10% 110%, rgba(20,20,22,0.04), transparent 55%), #faf9f6",
+              "radial-gradient(1100px 480px at 85% -8%, rgba(230,62,11,0.055), transparent 60%), radial-gradient(900px 420px at -10% 110%, rgba(23,20,9,0.04), transparent 55%), #f1ede1",
           }}>
           {/* dot grid texture */}
           <div
             className="pointer-events-none absolute inset-0 opacity-[0.35]"
-            style={{ backgroundImage: "radial-gradient(rgba(20,20,22,0.09) 0.6px, transparent 0.6px)", backgroundSize: "22px 22px" }} />
+            style={{ backgroundImage: "radial-gradient(rgba(23,20,9,0.09) 0.6px, transparent 0.6px)", backgroundSize: "22px 22px" }} />
           {/* ambient soundscape: equalizer strip, voice rings, drifting warmth */}
           <Soundscape />
           <div className="relative mx-auto w-full max-w-6xl px-5 pb-16 pt-20 md:px-8 md:pt-10">

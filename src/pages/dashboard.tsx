@@ -30,7 +30,7 @@ function Waveform() {
   return (
     <div className="flex h-16 items-end justify-center gap-1.5" aria-hidden>
       {heights.map((h, i) => (
-        <span key={i} className="w-1.5 rounded-full bg-[#ff5701] transition-all duration-500"
+        <span key={i} className="w-1.5 rounded-full bg-[#e63e0b] transition-all duration-500"
           style={{ height: `${h}px`, animation: `wave 1.6s ease-in-out ${i * 0.09}s infinite`, opacity: 0.55 + (i % 3) * 0.15 }} />
       ))}
       <style>{`@keyframes wave { 0%,100% { transform: scaleY(0.55); } 50% { transform: scaleY(1); } }`}</style>
@@ -144,9 +144,9 @@ export function DashboardPage() {
     return (
       <div className="mx-auto max-w-4xl pt-6">
         <div className="text-center">
-          <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-[#ff5701]">VoiceAgent Console</p>
-          <h1 className="mx-auto mt-4 max-w-2xl text-4xl font-semibold leading-tight tracking-[-0.02em] md:text-5xl">
-            Your agent's live heartbeat,
+          <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-[#e63e0b]">VoiceAgent Console</p>
+          <h1 className="mx-auto mt-4 max-w-2xl font-display text-4xl font-semibold leading-tight tracking-[-0.02em] md:text-5xl">
+            Your agent's live <em className="font-serif font-normal italic text-[#e63e0b]">heartbeat</em>,
             <span className="text-black/25"> once it's running.</span>
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-black/55">
@@ -159,7 +159,7 @@ export function DashboardPage() {
           <div className="card-3d p-6">
             <Waveform />
             <div className="mt-5 text-center">
-              <Button size="lg" onClick={goToConnect} className="h-11 gap-2 rounded-full bg-[#141416] px-7 text-white hover:bg-black hover:shadow-lg hover:shadow-black/20">
+              <Button size="lg" onClick={goToConnect} className="h-11 gap-2 rounded-full bg-[#171409] px-7 text-white hover:bg-black hover:shadow-lg hover:shadow-black/20">
                 Connect your agent <ArrowRight className="size-4" />
               </Button>
             </div>
@@ -170,7 +170,7 @@ export function DashboardPage() {
           {STEPS.map(({ icon: Icon, title, desc }, i) => (
             <SpotlightCard key={title} className="p-5">
               <div className="flex items-center gap-3">
-                <span className="flex size-9 items-center justify-center rounded-xl bg-[#141416] text-[#ff5701]">
+                <span className="flex size-9 items-center justify-center rounded-xl bg-[#171409] text-[#e63e0b]">
                   <Icon className="size-4" />
                 </span>
                 <span className="font-mono text-[11px] text-black/35">0{i + 1}</span>
@@ -210,7 +210,7 @@ export function DashboardPage() {
     <div className="space-y-10">
       <header className="flex items-end justify-between gap-4">
         <div>
-          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#ff5701]">Overview</p>
+          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#e63e0b]">Overview</p>
           <div className="mt-2 flex items-center gap-2 text-[13px] text-black/45">
             <span className="relative flex size-1.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60" />
@@ -235,7 +235,7 @@ export function DashboardPage() {
         <StaggerItem className="lg:col-span-6">
           <SpotlightCard className="h-full p-6">
             <div className="flex items-center justify-between">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-[#ff5701]/10 text-[#ff5701]">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-[#e63e0b]/10 text-[#e63e0b]">
                 <PhoneCall className="size-4" />
               </span>
               <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-black/35">calls handled</span>
@@ -346,7 +346,7 @@ export function DashboardPage() {
                 <TableBody>
                   {(showAll ? calls : calls.slice(0, 10)).map((c) => (
                     <TableRow key={callKey(c)} className={cn("group/row transition-all hover:bg-black/[0.045]", flashKeys.has(callKey(c)) && "row-flash")}>
-                      <TableCell className="pl-6 font-mono text-xs tabular-nums text-black/45 transition-colors group-hover/row:text-[#ff5701]">{c.ts.replace("T", " ").slice(0, 16)}</TableCell>
+                      <TableCell className="pl-6 font-mono text-xs tabular-nums text-black/45 transition-colors group-hover/row:text-[#e63e0b]">{c.ts.replace("T", " ").slice(0, 16)}</TableCell>
                       <TableCell className="font-mono text-xs">{c.conv_id}</TableCell>
                       <TableCell className="font-medium">{c.action}</TableCell>
                       <TableCell><Badge variant="outline" className={cn("font-mono text-[11px]", verdictClass(c.verdict))}>{c.verdict}</Badge></TableCell>

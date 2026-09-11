@@ -1,20 +1,28 @@
 @import "tailwindcss";
 @import "@fontsource-variable/inter-tight";
 @import "@fontsource-variable/jetbrains-mono";
+@import url("https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&f[]=satoshi@400,500,700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital,wght@0,400;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
 
 @theme {
-  --font-sans: "Inter Tight", ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: "Satoshi", "Inter Tight", ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Clash Display", "Satoshi", ui-sans-serif, sans-serif;
+  --font-serif: "Instrument Serif", Georgia, serif;
+  --font-mono: "IBM Plex Mono", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 @layer base {
+  ::selection {
+    background: #e63e0b;
+    color: #fff4ec;
+  }
   :root {
     --background: oklch(0.972 0.004 82);
     --foreground: oklch(0.22 0.012 260);
     --card: #ffffff;
     --card-foreground: oklch(0.22 0.012 260);
     --popover: #ffffff;
-    --primary: #ff5701;
+    --primary: #e63e0b;
     --primary-foreground: #ffffff;
     --secondary: oklch(0.955 0.005 80);
     --secondary-foreground: oklch(0.4 0.01 260);
@@ -27,7 +35,7 @@
     --warning: #d97706;
     --border: oklch(0.915 0.005 80);
     --input: oklch(0.915 0.005 80);
-    --ring: #ff5701;
+    --ring: #e63e0b;
     --radius: 0.75rem;
   }
 
